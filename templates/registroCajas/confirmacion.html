@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar Entrega - Tres Montes{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header {% if entrega_existente %}bg-warning{% else %}bg-success text-white{% endif %}">
+                <h4>
+                    {% if entrega_existente %}
+                    ⚠ Caja Ya Entregada
+                    {% else %}
+                    ✅ Entrega Disponible
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ trabajador.nombre }} {{ trabajador.apellido }}</h5>
+                <p class="card-text"><strong>RUT:</strong> {{ trabajador.rut }}</p>
+                <p class="card-text"><strong>Tipo de Caja:</strong> {{ contrato.get_tipo_caja_display }}</p>
+
+                {% if entrega_existente %}
+                <div class="alert alert-warning">
+                    Este trabajador ya ha retirado su caja para este periodo.
+                </div>
+                <a href="{% url 'panel_principal' %}" class="btn btn-secondary">Volver</a>
+                {% else %}
+                <div class="alert alert-info">
+                    Por favor, verifique la identidad del trabajador antes de confirmar.
+                </div>
+                <form method="post" action="{% url 'registrar_entrega' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="rut" value="{{ trabajador.rut }}">
+                    <button type="submit" class="btn btn-success btn-lg">Confirmar Entrega</button>
+                    <a href="{% url 'buscar_trabajador' %}" class="btn btn-secondary btn-lg">Cancelar</a>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

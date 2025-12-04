@@ -1,0 +1,166 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Principal - Tres Montes</title>
+    <link rel="stylesheet" href="{% static 'css/panel.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1>🎯 Panel de Control</h1>
+            <div class="user-info">
+                {% if user.is_authenticated %}
+                <span class="user-name">{{ user.username }}</span>
+                {% endif %}
+                <div class="user-icon">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Estadísticas -->
+        <div class="stats-container">
+            <div class="stat-box" style="animation-delay: 0s;">
+                <div class="stat-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <div class="stat-number" data-target="{{ entregas_hoy }}">0</div>
+                <div class="stat-label">Entregas Hoy</div>
+            </div>
+            <div class="stat-box" style="animation-delay: 0.1s;">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-number" data-target="{{ pendientes }}">0</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="action-buttons">
+            <a href="{% url 'buscar_trabajador' %}" class="btn-action btn-danger">
+                <i class="fas fa-truck-loading"></i>
+                <span>Nueva Entrega</span>
+            </a>
+
+            <a href="{% url 'importar_trabajadores' %}" class="btn-action btn-primary">
+                <i class="fas fa-file-csv"></i>
+                <span>Importar CSV</span>
+            </a>
+        </div>
+
+        <!-- Entregas Recientes -->
+        <div class="recent-section">
+            <div class="section-header">
+                <i class="fas fa-history"></i>
+                Últimas Entregas
+            </div>
+            <div class="recent-list">
+                {% if entregas_recientes %}
+                {% for entrega in entregas_recientes %}
+                <div class="recent-item">
+                    <div class="recent-info">
+                        <span class="recent-name">{{ entrega.nombre }}</span>
+                        <span class="recent-date">{{ entrega.fecha|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <span class="badge badge-{{ entrega.estado }}">
+                        <i class="fas fa-check-circle"></i>
+                        {{ entrega.estado }}
+                    </span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>No hay entregas recientes</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Navigation -->
+    <footer class="footer-nav">
+        <a href="{% url 'panel_principal' %}" class="nav-item active">
+            <i class="fas fa-home"></i>
+            <span>Inicio</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fas fa-chart-bar"></i>
+            <span>Reportes</span>
+        </a>
+        <a href="{% url 'logout' %}" class="nav-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Salir</span>
+        </a>
+    </footer>
+
+    <script>
+        // Animated Counter
+        function animateCounter(element) {
+            const target = parseInt(element.getAttribute('data-target'));
+            const duration = 2000;
+            const increment = target / (duration / 16);
+            let current = 0;
+
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.textContent = target;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(current);
+                }
+            }, 16);
+        }
+
+        // Animate all counters on load
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.stat-number').forEach(animateCounter);
+        });
+
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const icon = themeToggle.querySelector('i');
+
+        // Check for saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-mode');
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+
+            if (body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
+</body>
+
+</html>

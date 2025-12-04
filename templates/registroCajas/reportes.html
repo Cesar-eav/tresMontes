@@ -1,0 +1,277 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes - Tres Montes</title>
+    <link rel="stylesheet" href="{% static 'css/panel.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .search-box {
+            margin-bottom: 25px;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: rgba(35, 149, 67, 0.8);
+            box-shadow: 0 0 20px rgba(35, 149, 67, 0.4);
+        }
+
+        .workers-table {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, rgba(35, 149, 67, 0.95), rgba(35, 149, 67, 0.85));
+            color: white;
+            padding: 20px;
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .worker-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 15px;
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            align-items: center;
+        }
+
+        .worker-row:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .worker-row:last-child {
+            border-bottom: none;
+        }
+
+        .worker-info {
+            color: #fff;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .worker-name {
+            font-size: 16px;
+        }
+
+        .worker-rut {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .worker-cargo {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .summary-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .summary-number {
+            font-size: 36px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1>📊 Reportes</h1>
+            <div class="user-info">
+                <a href="{% url 'panel_principal' %}" style="color: white; text-decoration: none;">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Stats Summary -->
+        <div class="stats-summary">
+            <div class="summary-card">
+                <div class="summary-number">{{ trabajadores_data|length }}</div>
+                <div class="summary-label">Total Trabajadores</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number">
+                    {% for item in trabajadores_data %}
+                    {% if item.estado == 'pendiente' %}1{% endif %}
+                    {% endfor %}
+                </div>
+                <div class="summary-label">Pendientes</div>
+            </div>
+        </div>
+
+        <!-- Search Box -->
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" placeholder="🔍 Buscar por nombre, RUT o cargo...">
+        </div>
+
+        <!-- Workers Table -->
+        <div class="workers-table">
+            <div class="table-header">
+                <i class="fas fa-users"></i>
+                Lista de Trabajadores
+            </div>
+            <div id="workersList">
+                {% for item in trabajadores_data %}
+                <div class="worker-row"
+                    data-search="{{ item.trabajador.nombre|lower }} {{ item.trabajador.apellido|lower }} {{ item.trabajador.rut|lower }} {{ item.trabajador.cargo|lower }}">
+                    <div class="worker-info worker-name">
+                        {{ item.trabajador.nombre }} {{ item.trabajador.apellido }}
+                    </div>
+                    <div class="worker-info worker-rut">
+                        {{ item.trabajador.rut }}
+                    </div>
+                    <div class="worker-info worker-cargo">
+                        {{ item.trabajador.cargo|default:"Sin cargo" }}
+                    </div>
+                    <span class="badge badge-{{ item.estado }}">
+                        {% if item.estado == 'entregado' %}
+                        <i class="fas fa-check-circle"></i>
+                        {% else %}
+                        <i class="fas fa-clock"></i>
+                        {% endif %}
+                        {{ item.estado }}
+                    </span>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fas fa-users-slash"></i>
+                    <p>No hay trabajadores registrados</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Navigation -->
+    <footer class="footer-nav">
+        <a href="{% url 'panel_principal' %}" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Inicio</span>
+        </a>
+        <a href="{% url 'reportes' %}" class="nav-item active">
+            <i class="fas fa-chart-bar"></i>
+            <span>Reportes</span>
+        </a>
+        <a href="{% url 'logout' %}" class="nav-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Salir</span>
+        </a>
+    </footer>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const icon = themeToggle.querySelector('i');
+
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-mode');
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+
+            if (body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const workerRows = document.querySelectorAll('.worker-row');
+
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+
+            workerRows.forEach(row => {
+                const searchData = row.getAttribute('data-search');
+                if (searchData.includes(searchTerm)) {
+                    row.style.display = 'grid';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

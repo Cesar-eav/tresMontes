@@ -1,0 +1,40 @@
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+__pycache__/
+*.egg-info/
+dist/
+build/
+
+# Entorno virtual (NO subir a GitHub)
+venv/
+env/
+ENV/
+.venv
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+/staticfiles/
+/media/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Archivos de configuración local
+*.env
+.env.local
+local_settings.py
+
+# Cache
+.pytest_cache/
+.coverage
+htmlcov/
