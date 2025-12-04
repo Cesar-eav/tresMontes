@@ -1,166 +1,108 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="es">
+{% extends 'base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Principal - Tres Montes</title>
-    <link rel="stylesheet" href="{% static 'css/panel.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
+{% block title %}Panel Principal - Tres Montes{% endblock %}
 
-<body>
-    <!-- Theme Toggle -->
-    <button class="theme-toggle" id="themeToggle">
-        <i class="fas fa-moon"></i>
-    </button>
+{% block content %}
 
-    <!-- Header -->
-    <header class="header">
-        <div class="header-content">
-            <h1>🎯 Panel de Control</h1>
-            <div class="user-info">
-                {% if user.is_authenticated %}
-                <span class="user-name">{{ user.username }}</span>
-                {% endif %}
-                <div class="user-icon">
-                    <i class="fas fa-user-circle"></i>
-                </div>
-            </div>
-        </div>
-    </header>
+<div class="row justify-content-center mt-4">
+    <div class="col-md-10">
+        <h2 class="text-center mb-4">Panel de Control</h2>
 
-    <!-- Main Content -->
-    <main class="main-content">
         <!-- Estadísticas -->
-        <div class="stats-container">
-            <div class="stat-box" style="animation-delay: 0s;">
-                <div class="stat-icon">
-                    <i class="fas fa-box-open"></i>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Entregas Hoy</h5>
+                        <p class="display-4 text-primary mb-0 stat-number" data-target="{{ entregas_hoy }}">0</p>
+                    </div>
                 </div>
-                <div class="stat-number" data-target="{{ entregas_hoy }}">0</div>
-                <div class="stat-label">Entregas Hoy</div>
             </div>
-            <div class="stat-box" style="animation-delay: 0.1s;">
-                <div class="stat-icon">
-                    <i class="fas fa-clock"></i>
+            <div class="col-md-6">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Pendientes</h5>
+                        <p class="display-4 text-warning mb-0 stat-number" data-target="{{ pendientes }}">0</p>
+                    </div>
                 </div>
-                <div class="stat-number" data-target="{{ pendientes }}">0</div>
-                <div class="stat-label">Pendientes</div>
             </div>
         </div>
 
         <!-- Botones de Acción -->
-        <div class="action-buttons">
-            <a href="{% url 'buscar_trabajador' %}" class="btn-action btn-danger">
-                <i class="fas fa-truck-loading"></i>
-                <span>Nueva Entrega</span>
-            </a>
-
-            <a href="{% url 'importar_trabajadores' %}" class="btn-action btn-primary">
-                <i class="fas fa-file-csv"></i>
-                <span>Importar CSV</span>
-            </a>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <a href="{% url 'buscar_trabajador' %}" class="btn btn-danger btn-lg w-100 py-3">
+                    <i class="fas fa-truck-loading me-2"></i>
+                    Nueva Entrega
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="{% url 'importar_trabajadores' %}" class="btn btn-primary btn-lg w-100 py-3">
+                    <i class="fas fa-file-csv me-2"></i>
+                    Importar CSV
+                </a>
+            </div>
         </div>
 
         <!-- Entregas Recientes -->
-        <div class="recent-section">
-            <div class="section-header">
-                <i class="fas fa-history"></i>
-                Últimas Entregas
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Últimas Entregas
+                </h5>
             </div>
-            <div class="recent-list">
+            <div class="card-body">
                 {% if entregas_recientes %}
-                {% for entrega in entregas_recientes %}
-                <div class="recent-item">
-                    <div class="recent-info">
-                        <span class="recent-name">{{ entrega.nombre }}</span>
-                        <span class="recent-date">{{ entrega.fecha|date:"d/m/Y H:i" }}</span>
+                <div class="list-group list-group-flush">
+                    {% for entrega in entregas_recientes %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ entrega.nombre }}</strong>
+                            <br>
+                            <small class="text-muted">{{ entrega.fecha|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        <span class="badge bg-success rounded-pill">
+                            <i class="fas fa-check-circle me-1"></i>
+                            Entregado
+                        </span>
                     </div>
-                    <span class="badge badge-{{ entrega.estado }}">
-                        <i class="fas fa-check-circle"></i>
-                        {{ entrega.estado }}
-                    </span>
+                    {% endfor %}
                 </div>
-                {% endfor %}
                 {% else %}
-                <div class="empty-state">
-                    <i class="fas fa-inbox"></i>
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
                     <p>No hay entregas recientes</p>
                 </div>
                 {% endif %}
             </div>
         </div>
-    </main>
+    </div>
+</div>
 
-    <!-- Footer Navigation -->
-    <footer class="footer-nav">
-        <a href="{% url 'panel_principal' %}" class="nav-item active">
-            <i class="fas fa-home"></i>
-            <span>Inicio</span>
-        </a>
-        <a href="#" class="nav-item">
-            <i class="fas fa-chart-bar"></i>
-            <span>Reportes</span>
-        </a>
-        <a href="{% url 'logout' %}" class="nav-item">
-            <i class="fas fa-sign-out-alt"></i>
-            <span>Salir</span>
-        </a>
-    </footer>
+{% endblock %}
 
-    <script>
-        // Animated Counter
-        function animateCounter(element) {
-            const target = parseInt(element.getAttribute('data-target'));
-            const duration = 2000;
-            const increment = target / (duration / 16);
-            let current = 0;
+{% block extra_js %}
+<script>
+    function animateCounter(element) {
+        const target = parseInt(element.getAttribute('data-target'));
+        const duration = 2000;
+        const increment = target / (duration / 16);
+        let current = 0;
 
-            const timer = setInterval(() => {
-                current += increment;
-                if (current >= target) {
-                    element.textContent = target;
-                    clearInterval(timer);
-                } else {
-                    element.textContent = Math.floor(current);
-                }
-            }, 16);
-        }
-
-        // Animate all counters on load
-        window.addEventListener('load', () => {
-            document.querySelectorAll('.stat-number').forEach(animateCounter);
-        });
-
-        // Theme Toggle
-        const themeToggle = document.getElementById('themeToggle');
-        const body = document.body;
-        const icon = themeToggle.querySelector('i');
-
-        // Check for saved theme
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        if (savedTheme === 'dark') {
-            body.classList.add('dark-mode');
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-        }
-
-        themeToggle.addEventListener('click', () => {
-            body.classList.toggle('dark-mode');
-
-            if (body.classList.contains('dark-mode')) {
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
-                localStorage.setItem('theme', 'dark');
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                element.textContent = target;
+                clearInterval(timer);
             } else {
-                icon.classList.remove('fa-sun');
-                icon.classList.add('fa-moon');
-                localStorage.setItem('theme', 'light');
+                element.textContent = Math.floor(current);
             }
-        });
-    </script>
-</body>
+        }, 16);
+    }
 
-</html>
+    window.addEventListener('load', () => {
+        document.querySelectorAll('.stat-number').forEach(animateCounter);
+    });
+</script>
+{% endblock %}

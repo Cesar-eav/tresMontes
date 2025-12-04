@@ -5,19 +5,6 @@
 }
 
 /* ===== ANIMATIONS ===== */
-@keyframes gradientShift {
-    0% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
-
-    100% {
-        background-position: 0% 50%;
-    }
-}
 
 @keyframes float {
 
@@ -91,8 +78,6 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
     min-height: 100vh;
     padding-bottom: 80px;
     overflow-x: hidden;
@@ -102,8 +87,6 @@ body {
 /* ===== DARK MODE ===== */
 body.dark-mode {
     background: linear-gradient(-45deg, #1a1a2e, #16213e, #0f3460, #533483);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
 }
 
 body.dark-mode .stat-box {
