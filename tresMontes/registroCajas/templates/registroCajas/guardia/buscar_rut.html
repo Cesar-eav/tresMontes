@@ -1,0 +1,43 @@
+{% extends '../base.html' %}
+{% block title %}Buscar por RUT{% endblock %}
+{% block content %}
+<div class="header">
+    <a href="{% url 'guardia_home' %}" style="position: absolute; left: 15px; color: white;"><i class="bi bi-arrow-left"></i></a>
+    <h2>Buscar Beneficiario</h2>
+</div>
+<div class="content">
+    {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }}">{{ message }}</div>{% endfor %}{% endif %}
+    <div class="card">
+        <div class="card-header"><i class="bi bi-search me-2"></i> Ingrese RUT</div>
+        <div class="card-body">
+            <form method="GET">
+                <div class="form-group"><input type="text" id="rut_buscar" name="rut" class="form-control" placeholder="12.345.678-9" value="{{ rut_buscado }}" required autofocus></div>
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-2"></i> Buscar</button>
+            </form>
+        </div>
+    </div>
+    {% if beneficiario %}
+    <div class="card">
+        <div class="card-header"><i class="bi bi-person-check me-2"></i> Resultado</div>
+        <div class="card-body">
+            <h5>{{ beneficiario.nombre }}</h5>
+            <p class="text-muted mb-2">{{ beneficiario.rut }}</p>
+            <div class="mb-2"><span class="badge bg-info">{{ beneficiario.get_tipo_contrato_display }}</span> <span class="badge bg-secondary">{{ beneficiario.get_tipo_caja_display }}</span></div>
+            {% if beneficiario.tiene_retiro %}
+            <div class="alert alert-success"><i class="bi bi-check-circle me-2"></i> Caja ya entregada el {{ beneficiario.retiro.fecha_hora|date:"d/m/Y H:i" }}</div>
+            {% else %}
+            <a href="{% url 'guardia_confirmar' beneficiario.id %}" class="btn btn-success w-100"><i class="bi bi-box-seam me-2"></i> Confirmar Entrega</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        vincularFormateadorRUT('rut_buscar');
+    });
+</script>
+{% endblock %}

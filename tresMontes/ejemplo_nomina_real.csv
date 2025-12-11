@@ -1,0 +1,7 @@
+RUT,EMPLEADO/NOMBRES,APELLIDOS,CARGO,TIPO_DE_CONTRATO,PERIODO,SEDE,ESTADO
+11.111-1,Juan,Pérez,Supervisor,Indefinido,2024 Santiago,PENDIENTE,
+12.222.222-2,Ana,García,Operaria,Plazo Fijo,2024 Valparaíso,PENDIENTE,
+13.333.333-3,Carlos,Lagos,Bodeguero,Indefinido,2024 Rancagua,RETIRADO,
+14.444.444-4,María,Silva,Administrativa,Plazo Fijo,2024 Santiago,PENDIENTE,
+15.555.555-5,Roberto,Gómez,Operario,Indefinido,2024 Santiago,PENDIENTE,
+16.666.666-6,Claudia,Torres,Supervisora,Plazo Fijo,2024 Valparaíso,PENDIENTE,

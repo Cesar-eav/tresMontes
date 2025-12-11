@@ -43,19 +43,19 @@
                     <label for="rol">Rol</label>
                     <select id="rol" name="rol" required>
                         <option value="">Seleccione un rol</option>
-                        <option value="administrador">Administrador</option>
+                        <option value="admin">Administrador</option>
                         <option value="guardia">Guardia / Portería</option>
                         <option value="trabajador">Trabajador</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="planta">Planta</label>
                     <select id="planta" name="planta" required>
                         <option value="">Seleccione una planta</option>
-                        <option value="casa_blanca">Casa Blanca</option>
-                        <option value="valparaiso_bif">Valparaíso Planta BIF</option>
-                        <option value="valparaiso_bic">Valparaíso Planta BIC</option>
+                        {% for planta in plantas %}
+                            <option value="{{ planta.codigo }}">{{ planta.nombre }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 

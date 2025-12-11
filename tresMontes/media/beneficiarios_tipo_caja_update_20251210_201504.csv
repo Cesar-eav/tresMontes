@@ -1,0 +1,13 @@
+id,nombre,rut,old_tipo_contrato,old_tipo_caja,new_tipo_caja,planta_id,campana_id,status,error
+42,Adriana,31.112.233-4,fijo,estandar,alternativa,1,11,updated,
+28,Andrea,12.345.678-9,fijo,estandar,alternativa,1,11,updated,
+38,Camila,27.778.899-0,fijo,estandar,alternativa,1,11,updated,
+26,Carmen,14.567.890-1,fijo,estandar,alternativa,3,11,updated,
+22,Claudia,17.234.567-8,fijo,estandar,alternativa,2,11,updated,
+36,Elena,25.556.677-8,fijo,estandar,alternativa,1,11,updated,
+44,Ignacia,33.334.455-6,fijo,estandar,alternativa,1,11,updated,
+40,Natalia,29.990.011-2,fijo,estandar,alternativa,1,11,updated,
+24,Patricia,19.123.456-7,fijo,estandar,alternativa,3,11,updated,
+34,Paula,23.334.455-6,fijo,estandar,alternativa,1,11,updated,
+30,Sofía,10.998.877-6,fijo,estandar,alternativa,1,11,updated,
+32,Valeria,21.112.233-4,fijo,estandar,alternativa,1,11,updated,

@@ -1,0 +1,35 @@
+{% extends '../base.html' %}
+{% block title %}Escáner QR{% endblock %}
+{% block content %}
+<div class="header">
+    <a href="{% url 'guardia_home' %}" style="position: absolute; left: 15px; color: white;"><i class="bi bi-arrow-left"></i></a>
+    <h2>Escáner QR</h2>
+</div>
+<div class="content">
+    <div class="card">
+        <div class="card-header"><i class="bi bi-qr-code-scan me-2"></i> Escaneador</div>
+        <div class="card-body text-center">
+            <div id="qr-reader" style="width: 100%; max-width: 500px; margin: 0 auto;"></div>
+            <div id="qr-result" class="mt-3"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+function onScanSuccess(decodedText, decodedResult) {
+    console.log(`Código escaneado: ${decodedText}`);
+    html5QrcodeScanner.clear();
+    document.getElementById('qr-result').innerHTML = '<div class="alert alert-success">Procesando...</div>';
+    window.location.href = `/guardia/buscar-rut/?rut=${decodedText}`;
+}
+function onScanError(errorMessage) {
+    console.log(errorMessage);
+}
+const html5QrcodeScanner = new Html5QrcodeScanner(
+    "qr-reader", { fps: 10, qrbox: 250 }
+);
+html5QrcodeScanner.render(onScanSuccess, onScanError);
+</script>
+{% endblock %}

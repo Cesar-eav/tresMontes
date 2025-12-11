@@ -1,0 +1,40 @@
+{% extends '../base.html' %}
+{% block title %}Gestión de Usuarios{% endblock %}
+{% block content %}
+<div class="header"><h2>Gestión de Usuarios</h2></div>
+<div class="content">
+    <div class="card">
+        <div class="card-header"><i class="bi bi-person-plus-fill me-2"></i> Administrar Personal</div>
+        <div class="card-body">
+            <a href="{% url 'admin_crear_usuario' %}" class="btn btn-primary w-100">
+                <i class="bi bi-plus-circle me-2"></i> Crear Nuevo Usuario
+            </a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><i class="bi bi-people me-2"></i> Usuarios Activos ({{ perfiles.count }})</div>
+        <div class="card-body">
+            {% for perfil in perfiles %}
+            <div class="list-item">
+                <div>
+                    <strong>{{ perfil.nombre_completo }}</strong>
+                    <div class="text-muted small">{{ perfil.user.username }} | {{ perfil.planta.nombre }}</div>
+                </div>
+                <span class="status-badge {% if perfil.rol == 'admin' %}status-delivered{% else %}status-pending{% endif %}">
+                    {{ perfil.get_rol_display }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block footer %}
+<div class="footer">
+    <a href="{% url 'admin_home' %}" class="nav-item"><i class="bi bi-speedometer2"></i><span>Panel</span></a>
+    <a href="{% url 'lista_diaria' %}" class="nav-item"><i class="bi bi-list-ul"></i><span>Lista</span></a>
+    <a href="{% url 'admin_reportes' %}" class="nav-item"><i class="bi bi-graph-up"></i><span>Reportes</span></a>
+    <a href="{% url 'admin_usuarios' %}" class="nav-item active"><i class="bi bi-people-fill"></i><span>Usuarios</span></a>
+    <a href="{% url 'perfil' %}" class="nav-item"><i class="bi bi-person-circle"></i><span>Perfil</span></a>
+</div>
+{% endblock %}

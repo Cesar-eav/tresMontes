@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prototipo Final - Sistema Tres Montes (footers fijos + rol Trabajador) — Emergencia</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_green.css"><!-- opcional -->
+    <style>
+        :root {
+            --primary-color: #1e5f3f;
+            --secondary-color: #f8f9fa;
+            --accent-color: #ffc107;
+            --text-color: #333;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+        }
+        .phone-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+            height: 800px;
+            border: 8px solid #222;
+            display: flex;
+            flex-direction: column;
+        }
+        /* Estilo de escritorio para Admin */
+        .desktop-mode-parent .col-md-6 {
+            max-width: 100% !important;
+            flex: 0 0 100% !important;
+        }
+        .phone-container.desktop-mode {
+            max-width: 95%;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        .phone-header {
+            background-color: #222;
+            color: white;
+            padding: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+        /* Header de escritorio para Admin */
+        .phone-container.desktop-mode .phone-header {
+            background-color: #f8f9fa;
+            color: #333;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-bottom: 1px solid #ddd;
+        }
+        .phone-screen { flex: 1; overflow-y: auto; position: relative; }
+        .screen { display: none; min-height: 100%; flex-direction: column; }
+        .screen.active { display: flex; }
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+        .header h2 { margin: 0; font-size: 1.5rem; }
+        .content { padding: 20px; flex-grow: 1; overflow-y: auto; }
+
+        /* Ocultar footers locales dentro de pantallas: usamos footers globales por rol */
+        .screen > .footer { display: none !important; }
+
+        .footer {
+            background-color: var(--secondary-color);
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid #ddd;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s, transform 0.05s ease-in-out;
+            user-select: none;
+        }
+        .nav-item:active { transform: scale(0.96); }
+        .nav-item.active { color: var(--primary-color); }
+        .nav-item i { font-size: 1.5rem; }
+        /* Botón de emergencia siempre rojo y destacado */
+        .nav-item.emergencia { color: var(--danger-color) !important; }
+        .nav-item.emergencia i { filter: drop-shadow(0 0 2px rgba(220,53,69,.4)); }
+        .nav-item.emergencia.active { color: #a71d2a !important; }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover { background-color: #164830; }
+        .btn-danger-soft {
+            background-color: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.4);
+            color: #a71d2a;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .card-header { background-color: var(--primary-color); color: white; padding: 10px 15px; font-weight: bold; }
+        .card-body { padding: 15px; }
+        .qr-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .scanner-animation { width: 200px; height: 200px; position: relative; margin-bottom: 20px; border-radius: 10px; overflow: hidden; }
+        .scanner-line { position: absolute; width: 100%; height: 2px; background-color: var(--primary-color); top: 0; animation: scan 2s infinite linear; }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        .stats-container { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .stat-card { background-color: white; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); flex: 1; margin: 0 5px; }
+        .stat-number { font-size: 2rem; font-weight: bold; color: var(--primary-color); }
+        .stat-label { font-size: 0.8rem; color: #666; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        .list-item:last-child { border-bottom: none; }
+        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .status-delivered { background-color: #d4edda; color: #155724; }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-completed { background-color: #d1ecf1; color: #0c5460; }
+        .file-upload-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
+        .file-upload-wrapper input[type=file] { position: absolute; left: -9999px; }
+        .file-upload-label {
+            display: block; padding: 10px; border: 2px dashed #ccc; border-radius: 5px;
+            text-align: center; cursor: pointer; transition: all 0.3s;
+        }
+        .file-upload-label:hover { border-color: var(--primary-color); background-color: rgba(30, 95, 63, 0.05); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background-color: white; border-radius: 10px; width: 90%; max-width: 400px; padding: 20px; position: relative; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .modal-close { cursor: pointer; font-size: 1.5rem; }
+        .background-color-light { background-color: rgba(30, 95, 63, 0.1); padding: 15px; border-radius: 10px; }
+        #boxCount { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 5px; background: linear-gradient(to right, var(--primary-color) 0%, var(--accent-color) 100%); outline: none; transition: background 0.3s; }
+        #boxCount::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--primary-color); cursor: pointer; transition: background 0.3s; }
+        #boxCount::-webkit-slider-thumb:hover { background: var(--accent-color); }
+        #boxCount::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--primary-color); cursor: pointer; transition: background 0.3s; }
+        #boxCount::-moz-range-track { height: 8px; border-radius: 5px; background: linear-gradient(to right, var(--primary-color) 0%, var(--accent-color) 100%); }
+
+        /* Apariencia elegante para input de días bloqueados */
+        #blockedDays {
+          font-size: 0.8rem;
+          line-height: 1.4;
+          color: #1e5f3f;
+          background-color: #f6fdf8;
+          border: 1px solid #cde0d3;
+          border-radius: 6px;
+          padding: 8px 10px;
+        }
+        .flatpickr-multiple .flatpickr-input[readonly] { white-space: normal; }
+        #blockedDays::placeholder { color: #999; font-style: italic; }
+        #blockedDays[readonly] { display: flex; flex-wrap: wrap; gap: 4px; }
+        #blockedDays[readonly]::after { content: attr(value); white-space: pre-wrap; }
+        .flatpickr-input[readonly][value] { background-image: none !important; }
+
+        /* Emergencia screen extra */
+        .callout-danger {
+            background: rgba(220,53,69,.08);
+            border: 1px solid rgba(220,53,69,.35);
+            color: #7a1b24;
+            padding: 12px 14px;
+            border-radius: 10px;
+        }
+
+        /* Mensajes de error */
+        .error-message {
+            color: #dc3545;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+        .error-message.show {
+            display: block;
+        }
+        .form-control.error {
+            border-color: #dc3545;
+        }
+        .plant-button.error {
+            border-color: #dc3545;
+            animation: shake 0.3s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Botones de selección de planta */
+        .plant-selector {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .plant-button {
+            flex: 1;
+            padding: 12px 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            text-align: center;
+            font-size: 0.85rem;
+            min-width: 100px;
+        }
+        .plant-button:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(30, 95, 63, 0.05);
+        }
+        .plant-button.selected {
+            border-color: var(--primary-color);
+            background-color: var(--primary-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <h1 class="text-center mb-4">Prototipo Final - Sistema Tres Montes</h1>
+                <div class="phone-container">
+                    <div class="phone-header">
+                        <span>9:41 AM</span>
+                        <div>
+                            <i class="bi bi-wifi"></i>
+                            <i class="bi bi-battery-full"></i>
+                        </div>
+                    </div>
+
+                    <div class="phone-screen">
+                        <!-- LOGIN -->
+                        <div id="loginScreen" class="screen active">
+                            <div class="header">
+                                <h2>Tres Montes</h2>
+                                <p>Sistema de Beneficios</p>
+                            </div>
+                            <div class="content">
+                                <div class="text-center mb-4">
+                                    <img src="https://picsum.photos/seed/tresmonteslogo/150/150.jpg" alt="Logo Tres Montes" class="rounded-circle mb-3">
+                                </div>
+                                <div class="form-group">
+                                    <label for="username">Usuario</label>
+                                    <input type="text" id="username" class="form-control" placeholder="Ingrese su usuario">
+                                    <div id="usernameError" class="error-message">Por favor ingrese su usuario</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="password">Contraseña</label>
+                                    <input type="password" id="password" class="form-control" placeholder="Ingrese su contraseña">
+                                    <div id="passwordError" class="error-message">Por favor ingrese su contraseña</div>
+                                </div>
+                                <div id="credentialsError" class="error-message" style="text-align: center; font-weight: bold;">Usuario o contraseña incorrectos</div>
+                                <div class="form-group">
+                                    <label for="role">Rol</label>
+                                    <select id="role" class="form-control">
+                                        <option value="admin">Administrador</option>
+                                        <option value="guardia">Guardia / Portería</option>
+                                        <option value="trabajador">Trabajador</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Planta</label>
+                                    <input type="hidden" id="plant" value="">
+                                    <div class="plant-selector" id="plantSelector">
+                                        <div class="plant-button" data-plant="casablanca" onclick="selectPlant('casablanca')">
+                                            Casa Blanca
+                                        </div>
+                                        <div class="plant-button" data-plant="valparaiso-bif" onclick="selectPlant('valparaiso-bif')">
+                                            Valparaíso Planta BIF
+                                        </div>
+                                        <div class="plant-button" data-plant="valparaiso-bic" onclick="selectPlant('valparaiso-bic')">
+                                            Valparaíso Planta BIC
+                                        </div>
+                                    </div>
+                                    <div id="plantError" class="error-message">Por favor seleccione una planta</div>
+                                </div>
+                                <button class="btn-primary w-100" onclick="login()"><i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión</button>
+                            </div>
+                        </div>
+
+                        <!-- ADMIN HOME -->
+                        <div id="adminHomeScreen" class="screen">
+                            <div class="header"><h2>Panel Admin</h2></div>
+                            <div class="content">
+                                <div class="stats-container">
+                                    <div class="stat-card">
+                                        <div class="stat-number">85%</div>
+                                        <div class="stat-label">Tasa de Entrega Hoy</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-number">42</div>
+                                        <div class="stat-label">Entregados Hoy</div>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header"><i class="bi bi-plus-circle me-2"></i> Acciones Rápidas</div>
+                                    <div class="card-body">
+                                        <button class="btn-primary w-100 mb-2" onclick="showScreen('crearEntregaScreen')">
+                                            <i class="bi bi-calendar-plus me-2"></i> Cargar Datos
+                                        </button>
+                                        <button class="btn-primary w-100" onclick="showScreen('scannerScreen')">
+                                            <i class="bi bi-qr-code-scan me-2"></i> Escanear Código QR
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="card">
+                                    <div class="card-header"><i class="bi bi-list-check me-2"></i> Actividad Reciente</div>
+                                    <div class="card-body">
+                                        <div class="list-item">
+                                            <div>
+                                                <strong>Juan Pérez</strong>
+                                                <div class="text-muted small">Hace 5 min</div>
+                                            </div>
+                                            <span class="status-badge status-delivered">Entregado</span>
+                                        </div>
+                                        <div class="list-item">
+                                            <div>
+                                                <strong>María González</strong>
+                                                <div class="text-muted small">Hace 15 min</div>
+                                            </div>
+                                            <span class="status-badge status-delivered">Entregado</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- footer local oculto por CSS -->
+                            <div class="footer">
+                                <div class="nav-item active"><i class="bi bi-speedometer2"></i><span>Panel</span></div>
+                                <div class="nav-item"><i class="bi bi-list-ul"></i><span>Lista Día</span></div>
+                                <div class="nav-item"><i class="bi bi-graph-up"></i><span>Reportes</span></div>
+                                <div class="nav-item"><i class="bi bi-people-fill"></i><span>Usuarios</span></div>
+                                <div class="nav-item"><i class="bi bi-person-circle"></i><span>Perfil</span></div>
+                            </div>
+                        </div>
+
+                        <div id="crearEntregaScreen" class="screen">
+                            <div class="header">
+                                <h2>Crear Nueva Entrega</h2>
+                                <i class="bi bi-arrow-left position-absolute start-0 ms-3" style="cursor: pointer;" onclick="showScreen('adminHomeScreen')"></i>
+                            </div>
+                            <div class="content">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="bi bi-calendar-date me-2"></i> Detalles de la Entrega
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group" >
+                                            <label for="deliveryStart" class="fw-bold">Inicio*</label>
+                                            <input type="date" id="deliveryStart" class="form-control">
+                                        </div>
+                                        <div class="form-group" >
+                                            <label for="deliveryEnd" class="fw-bold">Fin*</label>
+                                            <input type="date" id="deliveryEnd" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="plantSelect" class="fw-bold">Planta*</label>
+                                            <select id="plantSelect" class="form-control">
+                                                <option value="valparaiso">Valparaíso</option>
+                                                <option value="casablanca">Casablanca</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="blockedDays" class="fw-bold">Bloquear días (opcional)</label>
+                                            <input type="text" id="blockedDays" class="form-control" placeholder="Selecciona uno o más días">
+                                            <div id="selectedDaysContainer" class="mt-2 d-flex flex-wrap gap-2"></div>
+                                            <small class="text-muted">Puedes hacer clic en varias fechas para agregarlas o quitarlas.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="bi bi-file-earmark-excel me-2"></i> Cargar Nómina de Beneficiarios
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="file-upload-wrapper">
+                                            <input type="file" id="nominaFile" accept=".xlsx, .xls">
+                                            <label for="nominaFile" class="file-upload-label">
+                                                <i class="bi bi-cloud-upload" style="font-size: 2rem; color: var(--primary-color);"></i>
+                                                <p>Subir archivo Excel</p>
+                                                <small class="text-muted">.xlsx o .xls</small>
+                                            </label>
+                                        </div>
+                                        <div id="file-name" class="mt-2 text-success" style="display:none;">
+                                            <i class="bi bi-check-circle-fill"></i> <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn-primary w-100 mt-3" onclick="persistDeliveryRangeAndOpenSuccess()">
+                                    <i class="bi bi-check-circle me-2"></i> Crear y Activar Entrega
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="historialEntregasScreen" class="screen">
+                            <div class="header"><h2>Historial de Entregas</h2></div>
+                            <div class="content">
+                                <div class="list-item" style="cursor: pointer;" onclick="showScreen('detalleEntregaScreen')">
+                                    <div><strong>Entrega 1</strong><div class="text-muted small">15/05/2023 - Planta Valparaíso</div></div>
+                                    <span class="status-badge status-completed">Completada</span>
+                                </div>
+                                <div class="list-item" style="cursor: pointer;" onclick="showScreen('detalleEntregaScreen')">
+                                    <div><strong>Entrega 2</strong><div class="text-muted small">20/05/2023 - Planta Casablanca</div></div>
+                                    <span class="status-badge status-completed">Completada</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="detalleEntregaScreen" class="screen">
+                            <div class="header">
+                                <h2>Detalle de Entrega</h2>
+                                <i class="bi bi-arrow-left position-absolute start-0 ms-3" style="cursor: pointer;" onclick="showScreen('historialEntregasScreen')"></i>
+                            </div>
+                            <div class="content">
+                                <div class="card">
+                                    <div class="card-header"><i class="bi bi-info-circle me-2"></i> Información General</div>
+                                    <div class="card-body">
+                                        <div class="list-item"><span>Nombre:</span><strong>Entrega 1</strong></div>
+                                        <div class="list-item"><span>Fecha:</span><strong>15/05/2023</strong></div>
+                                        <div class="list-item"><span>Planta:</span><strong>Valparaíso</strong></div>
+                                        <div class="list-item"><span>Total Cajas:</span><strong>50</strong></div>
+                                        <div class="list-item"><span>Entregados:</span><strong>48</strong></div>
+                                        <div class="list-item"><span>No Retirados:</span><strong>2</strong></div>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header"><i class="bi bi-download me-2"></i> Reportes Generados</div>
+                                    <div class="card-body">
+                                        <a href="#" class="btn btn-outline-success w-100 mb-2" download>
+                                            <i class="bi bi-file-earmark-excel me-2"></i> Descargar Excel (Entregados)
+                                        </a>
+                                        <a href="#" class="btn btn-outline-danger w-100" download>
+                                            <i class="bi bi-file-earmark-excel me-2"></i> Descargar Excel (No Retirados)
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="reportesAdminScreen" class="screen">
+                            <div class="header"><h2>Reportes y Estadísticas</h2></div>
+                            <div class="content">
+                                <div class="form-group mb-3">
+                                    <label>Seleccionar Período</label>
+                                    <select class="form-control">
+                                        <option value="today">Hoy</option>
+                                        <option value="week">Esta Semana</option>
+                                        <option value="month">Este Mes</option>
+                                        <option value="year">Este Año</option>
+                                    </select>
+                                </div>
+                                <div class="stats-container">
+                                    <div class="stat-card"><div class="stat-number">85%</div><div class="stat-label">Tasa Entrega</div></div>
+                                    <div class="stat-card"><div class="stat-number">42</div><div class="stat-label">Entregados</div></div>
+                                    <div class="stat-card"><div class="stat-number">8</div><div class="stat-label">Pendientes</div></div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header"><i class="bi bi-bar-chart-line me-2"></i> Gráfico de Entregas</div>
+                                    <div class="card-body">
+                                        <img src="https://picsum.photos/seed/chart1/350/150.jpg" alt="Gráfico de entregas" style="width: 100%; border-radius: 5px;">
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header"><i class="bi bi-file-earmark-pdf me-2"></i> Reportes Históricos</div>
+                                    <div class="card-body">
+                                        <div class="list-item"><span>Entrega 1 - 15/05/2023</span><a href="#" download><i class="bi bi-download"></i></a></div>
+                                        <div class="list-item"><span>Entrega 2 - 20/05/2023</span><a href="#" download><i class="bi bi-download"></i></a></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="gestionUsuariosScreen" class="screen">
+                            <div class="header"><h2>Gestión de Usuarios</h2></div>
+                            <div class="content">
+                                <div class="card">
+                                    <div class="card-header"><i class="bi bi-person-plus-fill me-2"></i> Administrar Personal</div>
+                                    <div class="card-body">
+                                        <button class="btn-primary w-100 mb-2" onclick="showScreen('crearAdminScreen')">
+                                            <i class="bi bi-shield-lock me-2"></i> Crear Nuevo Administrador
+                                        </button>
+                                        <button class="btn-primary w-100" onclick="showScreen('crearGuardiaScreen')">
+                                            <i class="bi bi-badge me-2"></i> Agregar Nuevo Guardia
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header"><i class="bi bi-people me-2"></i> Usuarios Activos</div>
+                                    <div class="card-body">
+                                        <div class="list-item">
+                                            <div><strong>Ana Administradora</strong><div class="text-muted small">admin.ana@tresmontes.cl</div></div>
+                                            <span class="status-badge status-delivered">Admin</span>
+                                        </div>
+                                        <div class="list-item">
+                                            <div><strong>Carlos Silva</strong><div class="text-muted small">guardia.carlos@tresmontes.cl</div></div>
+                                            <span class="status-badge status-pending">Guardia</span>
+                                        </div>
+                                        <div class="list-item">
+                                            <div><strong>Luis Fernández</strong><div class="text-muted small">guardia.luis@tresmontes.cl</div></div>
+                                            <span class="status-badge status-pending">Guardia</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="crearAdminScreen" class="screen">
+                            <div class="header">
+                                <h2>Crear Administrador</h2>
+                                <i class="bi bi-arrow-left position-absolute start-0 ms-3" style="cursor: pointer;" onclick="showScreen('gestionUsuariosScreen')"></i>
+                            </div>
+                            <div class="content">
+                                <div class="form-group"><label>Nombre Completo*</label><input type="text" id="adminNombre" class="form-control" placeholder="Ej: Ana Martínez"></div>
+                                <div class="form-group"><label>Usuario*</label><input type="text" id="adminUsuario" class="form-control" placeholder="Ej: ana.martinez"></div>
+                                <div class="form-group"><label>Contraseña*</label><input type="password" id="adminPassword" class="form-control" placeholder="Crear contraseña"></div>
+                                <div class="form-group"><label>Planta Asignada*</label>
+                                    <select id="adminPlanta" class="form-control"><option value="">Seleccione...</option><option>Valparaíso</option><option>Casablanca</option><option>Ambas</option></select>
+                                </div>
+                                <button class="btn-primary w-100" onclick="crearAdministrador()">Crear Administrador</button>
+                            </div>
+                        </div>
+
+                        <div id="crearGuardiaScreen" class="screen">
+                            <div class="header">
+                                <h2>Agregar Guardia</h2>
+                                <i class="bi bi-arrow-left position-absolute start-0 ms-3" style="cursor: pointer;" onclick="showScreen('gestionUsuariosScreen')"></i>
+                            </div>
+                            <div class="content">
+                                <div class="form-group"><label>Nombre Completo*</label><input type="text" id="guardiaNombre" class="form-control" placeholder="Ej: Carlos Silva"></div>
+                                <div class="form-group"><label>Usuario*</label><input type="text" id="guardiaUsuario" class="form-control" placeholder="Ej: carlos.silva"></div>
+                                <div class="form-group"><label>Contraseña*</label><input type="password" id="guardiaPassword" class="form-control" placeholder="Crear contraseña"></div>
+                                <div class="form-group"><label>Planta Asignada*</label>
+                                    <select id="guardiaPlanta" class="form-control"><option value="">Seleccione...</option><option>Valparaíso</option><option>Casablanca</option></select>
+                                </div>
+                                <button class="btn-primary w-100" onclick="crearGuardia()">Agregar Guardia</button>
+                            </div>
+                        </div>
+
+                        <!-- GUARDIA -->
+                        <div id="guardiaHomeScreen" class="screen">
+                            <div class="header"><h2>Panel Principal</h2><div class="notification">3</div></div>
+                            <div class="content">
+                                <div class="stats-container">
+                                    <div class="stat-card"><div class="stat-number">42</div><div class="stat-label">Entregados Hoy</div></div>
+                                    <div class="stat-card"><div class="stat-number">8</div><div class="stat-label">Pendientes</div></div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header"><i class="bi bi-qr-code-scan me-2"></i> Escáner QR</div>
+                                    <div class="card-body text-center">
+                                        <p>Presione el botón para activar el escáner</p>
+                                        <button class="btn-primary w-100 mb-2" onclick="showScreen('scannerScreen')">
+                                            <i class="bi bi-qr-code-scan me-2"></i> Abrir Escáner
+                                        </button>
+                                        <button class="btn-primary w-100" onclick="showScreen('entregaPorRutScreen')">
+                                            <i class="bi bi-card-text me-2"></i> Entregar por RUT
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header"><i class="bi bi-list-check me-2"></i> Entregas Recientes</div>
+                                    <div class="card-body">
+                                        <div class="list-item">
+                                            <div><strong>Juan Pérez</strong><div class="text-muted small">Planta Valparaíso</div></div>
+                                            <span class="status-badge status-delivered">Entregado</span>
+                                        </div>
+                                        <div class="list-item">
+                                            <div><strong>María González</strong><div class="text-muted small">Planta Casablanca</div></div>
+                                            <span class="status-badge status-pending">Pendiente</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="entregaPorRutScreen" class="screen">
+                            <div class="header">
+                                <h2>Entregar por RUT</h2>
+                                <i class="bi bi-arrow-left position-absolute start-0 ms-3" style="cursor: pointer;" onclick="showScreen('guardiaHomeScreen')"></i>
+                            </div>
+                            <div class="content">
+                                <div class="card">
+                                    <div class="card-header"><i class="bi bi-card-text me-2"></i> Buscar Colaborador</div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label for="rutInput" class="fw-bold">RUT del Colaborador</label>
+                                            <input type="text" id="rutInput" class="form-control" placeholder="Ej: 12.345.678-9">
+                                        </div>
+                                        <button class="btn-primary w-100" onclick="buscarPorRut()">
+                                            <i class="bi bi-search me-2"></i> Buscar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="scannerScreen" class="screen">
+                            <div class="header"><h2>Escáner QR</h2><i class="bi bi-x-lg position-absolute end-0 me-3" style="cursor: pointer;" onclick="goBack()"></i></div>
+                            <div class="content">
+                                <div class="qr-container">
+                                    <div class="scanner-animation">
+                                        <img src="https://picsum.photos/seed/qrscanner/200/200.jpg" alt="Vista de escáner" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
+                                        <div class="scanner-line"></div>
+                                    </div>
+                                    <p class="text-center">Apunte la cámara hacia el código QR del colaborador</p>
+                                    <button class="btn-primary w-100" onclick="showScreen('confirmScreen')">
+                                        <i class="bi bi-qr-code-scan me-2"></i> Simular Escaneo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="confirmScreen" class="screen">
+                            <div class="header"><h2>Confirmar Entrega</h2></div>
+                            <div class="content">
+                                <div class="card">
+                                    <div class="card-header"><i class="bi bi-person-badge me-2"></i> Datos del Colaborador</div>
+                                    <div class="card-body">
+                                        <div class="list-item"><span>Nombre:</span><strong>Juan Pérez García</strong></div>
+                                        <div class="list-item"><span>RUT:</span><strong>12.345.678-9</strong></div>
+                                        <div class="list-item"><span>Tipo de Caja:</span><strong>Estándar</strong></div>
+                                    </div>
+                                </div>
+                                <button class="btn-primary w-100" onclick="showModal('confirmModal')">
+                                    <i class="bi bi-check-circle me-2"></i> Confirmar Entrega
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="listaDiariaScreen" class="screen">
+                            <div class="header"><h2>Entregas del Día</h2></div>
+                            <div class="content">
+                                <div class="card mb-3">
+                                    <div class="card-body" style="padding: 10px;">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label class="small fw-bold">Filtrar por día</label>
+                                                <select id="filtroFecha" class="form-control form-control-sm" onchange="filtrarEntregas()">
+                                                    <option value="hoy">Hoy</option>
+                                                    <option value="ayer">Ayer</option>
+                                                    <option value="semana">Esta semana</option>
+                                                    <option value="mes">Este mes</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="small fw-bold">Tipo trabajador</label>
+                                                <select id="filtroTipo" class="form-control form-control-sm" onchange="filtrarEntregas()">
+                                                    <option value="todos">Todos</option>
+                                                    <option value="indefinido">Plazo Indefinido</option>
+                                                    <option value="fijo">Plazo Fijo</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <input type="text" id="buscarEntrega" class="form-control form-control-sm" placeholder="Buscar por nombre o RUT..." onkeyup="filtrarEntregas()">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="listaEntregas">
+                                    <div class="list-item" data-tipo="indefinido" data-estado="entregado">
+                                        <div>
+                                            <strong>Juan Pérez García</strong>
+                                            <div class="text-muted small">RUT: 12.345.678-9 • Plazo Indefinido</div>
+                                            <div class="text-muted small">Hora: 09:15</div>
+                                        </div>
+                                        <span class="status-badge status-delivered">Entregado</span>
+                                    </div>
+                                    <div class="list-item" data-tipo="fijo" data-estado="entregado">
+                                        <div>
+                                            <strong>María González López</strong>
+                                            <div class="text-muted small">RUT: 23.456.789-0 • Plazo Fijo</div>
+                                            <div class="text-muted small">Hora: 09:32</div>
+                                        </div>
+                                        <span class="status-badge status-delivered">Entregado</span>
+                                    </div>
+                                    <div class="list-item" data-tipo="indefinido" data-estado="entregado">
+                                        <div>
+                                            <strong>Carlos Ramírez Torres</strong>
+                                            <div class="text-muted small">RUT: 18.234.567-8 • Plazo Indefinido</div>
+                                            <div class="text-muted small">Hora: 10:05</div>
+                                        </div>
+                                        <span class="status-badge status-delivered">Entregado</span>
+                                    </div>
+                                    <div class="list-item" data-tipo="fijo" data-estado="entregado">
+                                        <div>
+                                            <strong>Ana Martínez Silva</strong>
+                                            <div class="text-muted small">RUT: 15.876.543-2 • Plazo Fijo</div>
+                                            <div class="text-muted small">Hora: 10:28</div>
+                                        </div>
+                                        <span class="status-badge status-delivered">Entregado</span>
+                                    </div>
+                                    <div class="list-item" data-tipo="indefinido" data-estado="entregado">
+                                        <div>
+                                            <strong>Pedro Sánchez Muñoz</strong>
+                                            <div class="text-muted small">RUT: 19.654.321-7 • Plazo Indefinido</div>
+                                            <div class="text-muted small">Hora: 11:10</div>
+                                        </div>
+                                        <span class="status-badge status-delivered">Entregado</span>
+                                    </div>
+                                    <div class="list-item" data-tipo="indefinido" data-estado="entregado">
+                                        <div>
+                                            <strong>Laura Fernández Rojas</strong>
+                                            <div class="text-muted small">RUT: 17.345.678-9 • Plazo Indefinido</div>
+                                            <div class="text-muted small">Hora: 11:45</div>
+                                        </div>
+                                        <span class="status-badge status-delivered">Entregado</span>
+                                    </div>
+                                    <div class="list-item" data-tipo="fijo" data-estado="pendiente">
+                                        <div>
+                                            <strong>Roberto Castro Díaz</strong>
+                                            <div class="text-muted small">RUT: 16.789.012-3 • Plazo Fijo</div>
+                                        </div>
+                                        <span class="status-badge status-pending">Pendiente</span>
+                                    </div>
+                                    <div class="list-item" data-tipo="indefinido" data-estado="pendiente">
+                                        <div>
+                                            <strong>Sofía Vargas Pinto</strong>
+                                            <div class="text-muted small">RUT: 20.123.456-4 • Plazo Indefinido</div>
+                                        </div>
+                                        <span class="status-badge status-pending">Pendiente</span>
+                                    </div>
+                                    <div class="list-item" data-tipo="fijo" data-estado="entregado">
+                                        <div>
+                                            <strong>Diego Morales Vera</strong>
+                                            <div class="text-muted small">RUT: 14.567.890-1 • Plazo Fijo</div>
+                                            <div class="text-muted small">Hora: 12:20</div>
+                                        </div>
+                                        <span class="status-badge status-delivered">Entregado</span>
+                                    </div>
+                                    <div class="list-item" data-tipo="indefinido" data-estado="entregado">
+                                        <div>
+                                            <strong>Camila Torres Bravo</strong>
+                                            <div class="text-muted small">RUT: 21.234.567-5 • Plazo Indefinido</div>
+                                            <div class="text-muted small">Hora: 13:05</div>
+                                        </div>
+                                        <span class="status-badge status-delivered">Entregado</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PERFIL (compartido) -->
+                        <div id="profileScreen" class="screen">
+                            <div class="header" id="profileHeader"><h2>Mi Perfil</h2></div>
+                            <div class="content">
+                                <div class="text-center mb-4">
+                                    <img src="https://picsum.photos/seed/profileuser/150/150.jpg" alt="Foto de perfil" class="rounded-circle mb-3">
+                                    <h4 id="profileName">Carlos Silva</h4>
+                                    <p class="text-muted" id="profileRole">Guardia de Seguridad</p>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header" id="profileCardHeader">
+                                        <i class="bi bi-info-circle me-2"></i> Información
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="list-item"><span>RUT:</span><strong>98.765.432-1</strong></div>
+                                        <div class="list-item"><span>Planta:</span><strong>Valparaíso</strong></div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline-danger w-100 mt-3" onclick="logout()">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ===== TRABAJADOR ===== -->
+                        <div id="trabajadorHomeScreen" class="screen">
+                            <div class="header"><h2>Mi Caja</h2></div>
+                            <div class="content">
+                                <div class="card mb-3">
+                                    <div class="card-header"><i class="bi bi-calendar-check me-2"></i> ¿Retiras HOY?</div>
+                                    <div class="card-body">
+                                        <p class="mb-2">Confirma si hoy pasarás a retirar tu caja.</p>
+                                        <button id="btnConfirmToday" class="btn-primary w-100" onclick="workerConfirmToday()">
+                                            <i class="bi bi-check2-circle me-2"></i> Sí, iré hoy
+                                        </button>
+                                        <small id="confirmTodayInfo" class="text-success d-none">✔ Confirmado para hoy.</small>
+                                    </div>
+                                </div>
+                                <div class="card mb-3">
+                                    <div class="card-header"><i class="bi bi-calendar-event me-2"></i> Agendar retiro</div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label for="workerPickupDate" class="fw-bold">Fecha de retiro (futuro)</label>
+                                            <input type="text" id="workerPickupDate" class="form-control" placeholder="Selecciona una fecha">
+                                        </div>
+                                        <button class="btn-primary w-100 mt-2" onclick="workerSchedulePickup()">
+                                            <i class="bi bi-save2 me-2"></i> Guardar fecha
+                                        </button>
+                                        <small id="scheduledInfo" class="text-success d-none">✔ Fecha agendada.</small>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header"><i class="bi bi-person-check me-2"></i> Autorizar a un tercero</div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label class="fw-bold">Nombre completo del tercero</label>
+                                            <input type="text" id="authName" class="form-control" placeholder="Ej: María López">
+                                        </div>
+                                        <div class="form-group mt-2">
+                                            <label class="fw-bold">RUT del tercero</label>
+                                            <input type="text" id="authRut" class="form-control" placeholder="Ej: 12.345.678-9">
+                                        </div>
+                                        <div class="form-group mt-2">
+                                            <label class="fw-bold">Fecha autorizada</label>
+                                            <input type="text" id="authDate" class="form-control" placeholder="Selecciona una fecha">
+                                        </div>
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" id="authOnlyOnce" checked>
+                                            <label class="form-check-label" for="authOnlyOnce">Solo por esta fecha</label>
+                                        </div>
+                                        <button class="btn-primary w-100 mt-3" onclick="workerAuthorizeThirdParty()">
+                                            <i class="bi bi-shield-check me-2"></i> Autorizar
+                                        </button>
+                                        <small id="authorizedInfo" class="text-success d-none">✔ Autorización registrada.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ===== NUEVA PANTALLA: EMERGENCIA ===== -->
+                        <div id="emergenciaScreen" class="screen">
+                            <div class="header">
+                                <h2>Bloqueo de Día por Emergencia</h2>
+                                <i class="bi bi-arrow-left position-absolute start-0 ms-3" style="cursor: pointer;" onclick="showScreen('adminHomeScreen')"></i>
+                            </div>
+                            <div class="content">
+                                <div class="callout-danger mb-3 d-flex align-items-start gap-2">
+                                    <i class="bi bi-exclamation-triangle-fill" style="font-size:1.4rem;"></i>
+                                    <div>
+                                        <strong>Acción crítica:</strong> bloquea un día dentro del rango activo para impedir retiros ese día.
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header"><i class="bi bi-calendar-x me-2"></i> Selección de día a bloquear</div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label class="fw-bold">Fecha (dentro del rango activo)</label>
+                                            <input type="text" id="emergencyDate" class="form-control" placeholder="Selecciona la fecha a bloquear">
+                                            <small id="rangeInfo" class="text-muted"></small>
+                                        </div>
+                                        <button class="btn btn-danger-soft w-100 mt-3" onclick="confirmEmergencyBlock()">
+                                            <i class="bi bi-shield-exclamation me-2"></i> Confirmar Bloqueo
+                                        </button>
+                                        <small id="emergencySaved" class="text-success d-none">✔ Día bloqueado por emergencia.</small>
+                                    </div>
+                                </div>
+                                <div class="card mt-3">
+                                    <div class="card-header"><i class="bi bi-clock-history me-2"></i> Bloqueos de emergencia recientes</div>
+                                    <div class="card-body" id="emergencyList">
+                                        <div class="text-muted small">Sin bloqueos registrados.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MODALES -->
+                        <div id="confirmModal" class="modal">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5>¡Entrega Confirmada!</h5>
+                                    <span class="modal-close" onclick="hideModal('confirmModal')">&times;</span>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                                    <p>La caja ha sido registrada para <strong>Juan Pérez García</strong>.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="btn-primary w-100" onclick="hideModal('confirmModal'); showScreen('scannerScreen');">Escanear Siguiente</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="successModal" class="modal">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5>¡Entrega Creada!</h5>
+                                    <span class="modal-close" onclick="hideModal('successModal')">&times;</span>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                                    <p>La nueva entrega ha sido creada y activada exitosamente.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="btn-primary w-100" onclick="hideModal('successModal'); showScreen('adminHomeScreen');">Aceptar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="userCreatedModal" class="modal">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5>¡Usuario Creado!</h5>
+                                    <span class="modal-close" onclick="hideModal('userCreatedModal')">&times;</span>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <i class="bi bi-person-check-fill text-success" style="font-size: 3rem;"></i>
+                                    <p>El nuevo usuario ha sido agregado al sistema correctamente.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="btn-primary w-100" onclick="hideModal('userCreatedModal'); showScreen('gestionUsuariosScreen');">Aceptar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal genérico del Trabajador -->
+                        <div id="workerModal" class="modal">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 id="workerModalTitle">Acción realizada</h5>
+                                    <span class="modal-close" onclick="hideModal('workerModal')">&times;</span>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <i class="bi bi-check2-circle text-success" style="font-size: 3rem;"></i>
+                                    <p id="workerModalMsg">Operación realizada correctamente.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="btn-primary w-100" onclick="hideModal('workerModal')">Aceptar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div><!-- /phone-screen -->
+
+                    <!-- ===== FOOTERS GLOBALES (persisten por rol) ===== -->
+                    <div id="adminFooter" class="footer" style="display:none;">
+                        <div class="nav-item" data-admin-index="0" onclick="showScreen('adminHomeScreen')">
+                            <i class="bi bi-speedometer2"></i><span>Panel</span>
+                        </div>
+                        <div class="nav-item" data-admin-index="1" onclick="showScreen('listaDiariaScreen')">
+                            <i class="bi bi-list-ul"></i><span>Lista Día</span>
+                        </div>
+                        <div class="nav-item" data-admin-index="2" onclick="showScreen('reportesAdminScreen')">
+                            <i class="bi bi-graph-up"></i><span>Reportes</span>
+                        </div>
+                        <div class="nav-item" data-admin-index="3" onclick="showScreen('gestionUsuariosScreen')">
+                            <i class="bi bi-people-fill"></i><span>Usuarios</span>
+                        </div>
+                        <div class="nav-item" data-admin-index="4" onclick="showScreen('profileScreen')">
+                            <i class="bi bi-person-circle"></i><span>Perfil</span>
+                        </div>
+                        <!-- Botón de EMERGENCIA (al final) -->
+                        <div class="nav-item emergencia" data-admin-index="5" onclick="openEmergency()">
+                            <i class="bi bi-exclamation-triangle-fill"></i><span>E</span>
+                        </div>
+                    </div>
+
+                    <div id="guardiaFooter" class="footer" style="display:none;">
+                        <div class="nav-item" data-guardia-index="0" onclick="showScreen('guardiaHomeScreen')">
+                            <i class="bi bi-house-door"></i><span>Inicio</span>
+                        </div>
+                        <div class="nav-item" data-guardia-index="1" onclick="showScreen('listaDiariaScreen')">
+                            <i class="bi bi-list-ul"></i><span>Entregas</span>
+                        </div>
+                        <div class="nav-item" data-guardia-index="2" onclick="showScreen('profileScreen')">
+                            <i class="bi bi-person-circle"></i><span>Perfil</span>
+                        </div>
+                    </div>
+
+                    <div id="trabajadorFooter" class="footer" style="display:none;">
+                        <div class="nav-item" data-trabajador-index="0" onclick="showScreen('trabajadorHomeScreen')">
+                            <i class="bi bi-house"></i><span>Inicio</span>
+                        </div>
+                        <div class="nav-item" data-trabajador-index="1" onclick="showScreen('profileScreen')">
+                            <i class="bi bi-person-circle"></i><span>Perfil</span>
+                        </div>
+                    </div>
+
+                </div><!-- /phone-container -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <script>
+        const slider = document.getElementById('boxCount');
+        const output = document.getElementById('boxCountValue');
+        if (slider && output) {
+            slider.addEventListener('input', () => { output.textContent = slider.value; });
+        }
+
+        let currentRole = '';
+        let lastScreen = '';
+
+        // Base de datos de usuarios válidos
+        const validUsers = {
+            // Administradores
+            'admin': { password: '123', role: 'admin', name: 'Ana Administradora' },
+            'admin.ana': { password: '123', role: 'admin', name: 'Ana Administradora' },
+
+            // Guardias
+            'guardia': { password: '123', role: 'guardia', name: 'Carlos Silva' },
+            'carlos.silva': { password: '123', role: 'guardia', name: 'Carlos Silva' },
+            'luis.fernandez': { password: '123', role: 'guardia', name: 'Luis Fernández' },
+
+            // Trabajadores
+            'trabajador': { password: '123', role: 'trabajador', name: 'Juan Pérez' },
+            'juan.perez': { password: '123', role: 'trabajador', name: 'Juan Pérez' },
+            'maria.gonzalez': { password: '123', role: 'trabajador', name: 'María González' }
+        };
+
+        // Función para seleccionar planta
+        function selectPlant(plantValue) {
+            // Remover clase 'selected' de todos los botones
+            document.querySelectorAll('.plant-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            // Agregar clase 'selected' al botón clickeado
+            const selectedButton = document.querySelector(`.plant-button[data-plant="${plantValue}"]`);
+            if (selectedButton) {
+                selectedButton.classList.add('selected');
+            }
+            // Actualizar el valor del input hidden
+            document.getElementById('plant').value = plantValue;
+
+            // Limpiar error de planta si existe
+            document.getElementById('plantError').classList.remove('show');
+        }
+
+        // Event listeners para limpiar errores al escribir
+        document.addEventListener('DOMContentLoaded', function() {
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+
+            if (usernameInput) {
+                usernameInput.addEventListener('input', function() {
+                    this.classList.remove('error');
+                    document.getElementById('usernameError').classList.remove('show');
+                });
+            }
+
+            if (passwordInput) {
+                passwordInput.addEventListener('input', function() {
+                    this.classList.remove('error');
+                    document.getElementById('passwordError').classList.remove('show');
+                });
+            }
+        });
+
+        function login() {
+            // Limpiar errores anteriores
+            clearLoginErrors();
+
+            const role = document.getElementById('role').value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const plant = document.getElementById('plant').value;
+
+            let hasErrors = false;
+
+            // Validar campos vacíos
+            if (!username) {
+                showError('username', 'usernameError');
+                hasErrors = true;
+            }
+
+            if (!password) {
+                showError('password', 'passwordError');
+                hasErrors = true;
+            }
+
+            if (!plant) {
+                showError('plantSelector', 'plantError');
+                // Aplicar animación de shake a todos los botones
+                document.querySelectorAll('.plant-button').forEach(btn => {
+                    btn.classList.add('error');
+                    setTimeout(() => btn.classList.remove('error'), 300);
+                });
+                hasErrors = true;
+            }
+
+            // Si hay errores de campos vacíos, no continuar
+            if (hasErrors) {
+                return;
+            }
+
+            // Validar credenciales contra la base de datos
+            const user = validUsers[username.toLowerCase()];
+
+            if (!user || user.password !== password) {
+                // Credenciales inválidas
+                showError('username', 'credentialsError');
+                showError('password', 'credentialsError');
+                document.getElementById('username').classList.add('error');
+                document.getElementById('password').classList.add('error');
+                return;
+            }
+
+            // Verificar que el rol seleccionado coincida con el rol del usuario
+            if (user.role !== role) {
+                showError('username', 'credentialsError');
+                showError('password', 'credentialsError');
+                document.getElementById('username').classList.add('error');
+                document.getElementById('password').classList.add('error');
+                document.getElementById('credentialsError').textContent = 'El rol seleccionado no coincide con el usuario';
+                document.getElementById('credentialsError').classList.add('show');
+                return;
+            }
+
+            // Credenciales válidas - Guardar sesión en localStorage
+            localStorage.setItem('session.role', role);
+            localStorage.setItem('session.username', username);
+            localStorage.setItem('session.plant', plant);
+            localStorage.setItem('session.name', user.name);
+
+            currentRole = role;
+            const container = document.querySelector('.phone-container');
+            const parentContainer = document.querySelector('.container');
+            if (role === 'admin') {
+                container.classList.add('desktop-mode');
+                parentContainer.classList.add('desktop-mode-parent');
+                showScreen('adminHomeScreen');
+            } else if (role === 'guardia') {
+                container.classList.remove('desktop-mode');
+                parentContainer.classList.remove('desktop-mode-parent');
+                showScreen('guardiaHomeScreen');
+            } else {
+                container.classList.remove('desktop-mode');
+                parentContainer.classList.remove('desktop-mode-parent');
+                showScreen('trabajadorHomeScreen');
+                document.getElementById('profileName').textContent = user.name;
+                document.getElementById('profileRole').textContent = 'Colaborador/a';
+            }
+        }
+
+        // Función para mostrar errores
+        function showError(fieldId, errorId) {
+            const field = document.getElementById(fieldId);
+            const error = document.getElementById(errorId);
+
+            if (field && field.classList) {
+                field.classList.add('error');
+            }
+            if (error) {
+                error.classList.add('show');
+            }
+        }
+
+        // Función para limpiar errores
+        function clearLoginErrors() {
+            // Limpiar clases de error de los campos
+            document.getElementById('username').classList.remove('error');
+            document.getElementById('password').classList.remove('error');
+
+            // Ocultar mensajes de error
+            document.getElementById('usernameError').classList.remove('show');
+            document.getElementById('passwordError').classList.remove('show');
+            document.getElementById('plantError').classList.remove('show');
+            document.getElementById('credentialsError').classList.remove('show');
+
+            // Restaurar texto original del mensaje de credenciales
+            document.getElementById('credentialsError').textContent = 'Usuario o contraseña incorrectos';
+        }
+
+        function logout() {
+            // Limpiar sesión del localStorage
+            localStorage.removeItem('session.role');
+            localStorage.removeItem('session.username');
+            localStorage.removeItem('session.plant');
+            localStorage.removeItem('session.name');
+
+            currentRole = '';
+            const container = document.querySelector('.phone-container');
+            const parentContainer = document.querySelector('.container');
+            container.classList.remove('desktop-mode');
+            parentContainer.classList.remove('desktop-mode-parent');
+            document.getElementById('role').value = 'guardia';
+            showScreen('loginScreen');
+            renderFooterForRole('loginScreen');
+        }
+
+        function goBack() {
+            if (lastScreen && lastScreen !== 'loginScreen') {
+                showScreen(lastScreen);
+            } else {
+                if (currentRole === 'admin') showScreen('adminHomeScreen');
+                else if (currentRole === 'trabajador') showScreen('trabajadorHomeScreen');
+                else showScreen('guardiaHomeScreen');
+            }
+        }
+
+        function showScreen(screenId) {
+            const active = document.querySelector('.screen.active');
+            if (active) lastScreen = active.id;
+            document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            updateProfileHeader(screenId);
+            renderFooterForRole(screenId);
+
+            if (screenId === 'emergenciaScreen') {
+                setupEmergencyPicker();
+                renderEmergencyList();
+            }
+        }
+
+        function renderFooterForRole(screenId) {
+            const adminFooter = document.getElementById('adminFooter');
+            const guardiaFooter = document.getElementById('guardiaFooter');
+            const trabajadorFooter = document.getElementById('trabajadorFooter');
+
+            document.querySelectorAll('#adminFooter .nav-item, #guardiaFooter .nav-item, #trabajadorFooter .nav-item')
+                .forEach(el => el.classList.remove('active'));
+
+            adminFooter.style.display = 'none';
+            guardiaFooter.style.display = 'none';
+            trabajadorFooter.style.display = 'none';
+
+            if (!currentRole) {
+                const adminScreens = ['adminHomeScreen','crearEntregaScreen','historialEntregasScreen','detalleEntregaScreen','reportesAdminScreen','gestionUsuariosScreen','crearAdminScreen','crearGuardiaScreen','listaDiariaScreen','profileScreen','emergenciaScreen'];
+                const guardiaScreens = ['guardiaHomeScreen','scannerScreen','confirmScreen','listaDiariaScreen','profileScreen'];
+                const trabajadorScreens = ['trabajadorHomeScreen','profileScreen'];
+                if (adminScreens.includes(screenId)) currentRole = 'admin';
+                else if (guardiaScreens.includes(screenId)) currentRole = 'guardia';
+                else if (trabajadorScreens.includes(screenId)) currentRole = 'trabajador';
+            }
+
+            if (currentRole === 'admin') {
+                adminFooter.style.display = 'flex';
+                const map = {
+                    'adminHomeScreen': 0,
+                    'listaDiariaScreen': 1,
+                    'reportesAdminScreen': 2,
+                    'gestionUsuariosScreen': 3,
+                    'profileScreen': 4,
+                    'emergenciaScreen': 5
+                };
+                const idx = map[screenId];
+                if (idx !== undefined) {
+                    const items = adminFooter.querySelectorAll('.nav-item');
+                    if (items[idx]) items[idx].classList.add('active');
+                }
+            } else if (currentRole === 'guardia') {
+                guardiaFooter.style.display = 'flex';
+                const map = {
+                    'guardiaHomeScreen': 0,
+                    'listaDiariaScreen': 1,
+                    'profileScreen': 2
+                };
+                const idx = map[screenId];
+                if (idx !== undefined) {
+                    const items = guardiaFooter.querySelectorAll('.nav-item');
+                    if (items[idx]) items[idx].classList.add('active');
+                }
+            } else if (currentRole === 'trabajador') {
+                trabajadorFooter.style.display = 'flex';
+                const map = {
+                    'trabajadorHomeScreen': 0,
+                    'profileScreen': 1
+                };
+                const idx = map[screenId];
+                if (idx !== undefined) {
+                    const items = trabajadorFooter.querySelectorAll('.nav-item');
+                    if (items[idx]) items[idx].classList.add('active');
+                }
+            }
+        }
+
+        function updateProfileHeader(screenId) {
+            if (screenId !== 'profileScreen') return;
+            const header = document.getElementById('profileHeader');
+            const cardHeader = document.getElementById('profileCardHeader');
+            const name = document.getElementById('profileName');
+            const roleText = document.getElementById('profileRole');
+
+            header.className = 'header';
+            cardHeader.className = 'card-header';
+
+            if (currentRole === 'admin') {
+                name.textContent = 'Ana Administradora';
+                roleText.textContent = 'Administradora de Sistema';
+            } else if (currentRole === 'trabajador') {
+                name.textContent = 'Trabajador/a';
+                roleText.textContent = 'Colaborador/a';
+            } else {
+                name.textContent = 'Carlos Silva';
+                roleText.textContent = 'Guardia de Seguridad';
+            }
+        }
+
+        function showModal(modalId) { document.getElementById(modalId).style.display = 'flex'; }
+        function hideModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+
+        document.getElementById('nominaFile')?.addEventListener('change', function() {
+            const fileName = this.files[0]?.name;
+            if (fileName) {
+                const displayName = document.querySelector('#file-name span');
+                displayName.textContent = `Archivo "${fileName}" listo.`;
+                document.getElementById('file-name').style.display = 'block';
+            }
+        });
+
+        // Flatpickr para días bloqueados (admin)
+        const fp = flatpickr("#blockedDays", {
+            mode: "multiple",
+            dateFormat: "Y-m-d",
+            locale: "es",
+            onReady(selected, str, inst) {
+                inst.input.value = "";
+                inst.input.placeholder = "Selecciona uno o más días";
+            },
+            onChange(selectedDates, dateStr, instance) {
+                instance.input.value = "";
+                instance.input.placeholder = selectedDates.length
+                    ? `${selectedDates.length} día(s) seleccionado(s)`
+                    : "Selecciona uno o más días";
+                const container = document.getElementById("selectedDaysContainer");
+                container.innerHTML = "";
+                selectedDates.forEach(d => {
+                    const valISO = instance.formatDate(d, "Y-m-d");
+                    const valUI  = instance.formatDate(d, "d/m/Y");
+                    const chip = document.createElement("span");
+                    chip.className = "badge rounded-pill bg-success d-inline-flex align-items-center";
+                    chip.style.fontSize = "0.8rem";
+                    chip.innerHTML = `${valUI} <button type="button" class="btn-close btn-close-white ms-2" aria-label="Quitar"></button>`;
+                    chip.querySelector(".btn-close").addEventListener("click", () => {
+                        const remaining = instance.selectedDates.filter(sd => instance.formatDate(sd, "Y-m-d") !== valISO);
+                        instance.setDate(remaining, true);
+                    });
+                    container.appendChild(chip);
+                    const hidden = document.createElement("input");
+                    hidden.type = "hidden"; hidden.name = "blocked_days[]"; hidden.value = valISO;
+                    container.appendChild(hidden);
+                });
+            }
+        });
+
+        // Guardar rango operativo al crear y activar entrega
+        function persistDeliveryRangeAndOpenSuccess() {
+            const start = document.getElementById('deliveryStart').value;
+            const end = document.getElementById('deliveryEnd').value;
+            const plant = document.getElementById('plantSelect').value;
+            const nominaFile = document.getElementById('nominaFile').files[0];
+
+            // Validar campos obligatorios
+            if (!start) {
+                alert('Por favor seleccione una fecha de inicio.');
+                document.getElementById('deliveryStart').focus();
+                return;
+            }
+
+            if (!end) {
+                alert('Por favor seleccione una fecha de fin.');
+                document.getElementById('deliveryEnd').focus();
+                return;
+            }
+
+            // Validar que la fecha de fin sea posterior a la de inicio
+            if (new Date(end) < new Date(start)) {
+                alert('La fecha de fin debe ser posterior a la fecha de inicio.');
+                document.getElementById('deliveryEnd').focus();
+                return;
+            }
+
+            if (!plant) {
+                alert('Por favor seleccione una planta.');
+                document.getElementById('plantSelect').focus();
+                return;
+            }
+
+            if (!nominaFile) {
+                alert('Por favor cargue un archivo Excel con la nómina de beneficiarios.');
+                document.getElementById('nominaFile').focus();
+                return;
+            }
+
+            // Validar tipo de archivo
+            const validExtensions = ['xls', 'xlsx'];
+            const fileExtension = nominaFile.name.split('.').pop().toLowerCase();
+            if (!validExtensions.includes(fileExtension)) {
+                alert('El archivo debe ser de tipo Excel (.xls o .xlsx).');
+                document.getElementById('nominaFile').value = '';
+                document.getElementById('file-name').style.display = 'none';
+                return;
+            }
+
+            // Guardar datos
+            if (start && end) {
+                localStorage.setItem('delivery.range', JSON.stringify({ start, end }));
+            }
+            showModal('successModal');
+        }
+
+        function getActiveDeliveryRange() {
+            // Preferir los inputs si tienen valor, si no, usar localStorage
+            const startInput = document.getElementById('deliveryStart')?.value -1;
+            const endInput = document.getElementById('deliveryEnd')?.value;
+            let start = startInput || null;
+            let end = endInput || null;
+            if (!start || !end) {
+                try {
+                    const saved = JSON.parse(localStorage.getItem('delivery.range') || '{}');
+                    if (saved.start && saved.end) {
+                        start = start || saved.start;
+                        end = end || saved.end;
+                    }
+                } catch(e){}
+            }
+            return { start, end };
+        }
+
+        // Emergencia: abrir pantalla y montar flatpickr con min/max del rango activo
+        function openEmergency() {
+            showScreen('emergenciaScreen');
+        }
+
+        function setupEmergencyPicker() {
+            const range = getActiveDeliveryRange();
+            const info = document.getElementById('rangeInfo');
+            if (!range.start || !range.end) {
+                info.textContent = "No hay rango activo configurado. Define Inicio y Fin en 'Crear Nueva Entrega' y actívala.";
+            } else {
+                info.textContent = `Rango activo: ${range.start} a ${range.end}`;
+            }
+            const options = {
+                dateFormat: "Y-m-d",
+                locale: "es",
+                minDate: range.start || null,
+                maxDate: range.end || null
+            };
+            if (window._emergencyPickerInstance && window._emergencyPickerInstance.destroy) {
+                window._emergencyPickerInstance.destroy();
+            }
+            window._emergencyPickerInstance = flatpickr("#emergencyDate", options);
+        }
+
+        function confirmEmergencyBlock() {
+            const range = getActiveDeliveryRange();
+            const date = document.getElementById('emergencyDate').value;
+            if (!range.start || !range.end) {
+                alert("Primero crea y activa una entrega con fechas de Inicio y Fin.");
+                return;
+            }
+            if (!date) { alert("Selecciona una fecha dentro del rango activo."); return; }
+            // Validar fecha dentro del rango
+            if (date < range.start || date > range.end) {
+                alert("La fecha seleccionada está fuera del rango activo.");
+                return;
+            }
+            // Guardar en localStorage
+            const key = 'emergency.blocks';
+            const existing = JSON.parse(localStorage.getItem(key) || '[]');
+            if (!existing.includes(date)) existing.push(date);
+            localStorage.setItem(key, JSON.stringify(existing));
+            document.getElementById('emergencySaved').classList.remove('d-none');
+            renderEmergencyList();
+        }
+
+        function renderEmergencyList() {
+            const key = 'emergency.blocks';
+            const container = document.getElementById('emergencyList');
+            const data = JSON.parse(localStorage.getItem(key) || '[]');
+            if (!data.length) {
+                container.innerHTML = '<div class="text-muted small">Sin bloqueos registrados.</div>';
+                return;
+            }
+            container.innerHTML = '';
+            data.sort().forEach(d => {
+                const row = document.createElement('div');
+                row.className = 'd-flex justify-content-between align-items-center border-bottom py-2';
+                row.innerHTML = `<div><i class="bi bi-calendar-x me-2"></i>${d}</div>
+                                 <button class="btn btn-sm btn-outline-danger" onclick="removeEmergencyBlock('${d}')"><i class="bi bi-trash"></i></button>`;
+                container.appendChild(row);
+            });
+        }
+
+        function removeEmergencyBlock(date) {
+            const key = 'emergency.blocks';
+            let data = JSON.parse(localStorage.getItem(key) || '[]');
+            data = data.filter(d => d !== date);
+            localStorage.setItem(key, JSON.stringify(data));
+            renderEmergencyList();
+        }
+
+        // Función para buscar colaborador por RUT
+        function buscarPorRut() {
+            const rut = document.getElementById('rutInput').value.trim();
+            if (!rut) {
+                alert('Por favor ingrese un RUT.');
+                return;
+            }
+
+            // Validar formato de RUT chileno (simple)
+            const rutRegex = /^\d{1,2}\.\d{3}\.\d{3}[-][0-9kK]{1}$/;
+            if (!rutRegex.test(rut)) {
+                alert('El formato del RUT no es válido. Use el formato: 12.345.678-9');
+                return;
+            }
+
+            // Simular búsqueda y redirigir a pantalla de confirmación
+            showScreen('confirmScreen');
+        }
+
+        // Función para crear administrador
+        function crearAdministrador() {
+            const nombre = document.getElementById('adminNombre').value.trim();
+            const usuario = document.getElementById('adminUsuario').value.trim();
+            const password = document.getElementById('adminPassword').value.trim();
+            const planta = document.getElementById('adminPlanta').value;
+
+            // Validar campos obligatorios
+            if (!nombre) {
+                alert('Por favor ingrese el nombre completo.');
+                document.getElementById('adminNombre').focus();
+                return;
+            }
+
+            if (!usuario) {
+                alert('Por favor ingrese un nombre de usuario.');
+                document.getElementById('adminUsuario').focus();
+                return;
+            }
+
+            // Validar que el usuario no contenga espacios
+            if (usuario.includes(' ')) {
+                alert('El nombre de usuario no puede contener espacios.');
+                document.getElementById('adminUsuario').focus();
+                return;
+            }
+
+            if (!password) {
+                alert('Por favor ingrese una contraseña.');
+                document.getElementById('adminPassword').focus();
+                return;
+            }
+
+            // Validar longitud mínima de contraseña
+            if (password.length < 3) {
+                alert('La contraseña debe tener al menos 3 caracteres.');
+                document.getElementById('adminPassword').focus();
+                return;
+            }
+
+            if (!planta) {
+                alert('Por favor seleccione una planta asignada.');
+                document.getElementById('adminPlanta').focus();
+                return;
+            }
+
+            // Limpiar formulario
+            document.getElementById('adminNombre').value = '';
+            document.getElementById('adminUsuario').value = '';
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('adminPlanta').value = '';
+
+            showModal('userCreatedModal');
+        }
+
+        // Función para crear guardia
+        function crearGuardia() {
+            const nombre = document.getElementById('guardiaNombre').value.trim();
+            const usuario = document.getElementById('guardiaUsuario').value.trim();
+            const password = document.getElementById('guardiaPassword').value.trim();
+            const planta = document.getElementById('guardiaPlanta').value;
+
+            // Validar campos obligatorios
+            if (!nombre) {
+                alert('Por favor ingrese el nombre completo.');
+                document.getElementById('guardiaNombre').focus();
+                return;
+            }
+
+            if (!usuario) {
+                alert('Por favor ingrese un nombre de usuario.');
+                document.getElementById('guardiaUsuario').focus();
+                return;
+            }
+
+            // Validar que el usuario no contenga espacios
+            if (usuario.includes(' ')) {
+                alert('El nombre de usuario no puede contener espacios.');
+                document.getElementById('guardiaUsuario').focus();
+                return;
+            }
+
+            if (!password) {
+                alert('Por favor ingrese una contraseña.');
+                document.getElementById('guardiaPassword').focus();
+                return;
+            }
+
+            // Validar longitud mínima de contraseña
+            if (password.length < 3) {
+                alert('La contraseña debe tener al menos 3 caracteres.');
+                document.getElementById('guardiaPassword').focus();
+                return;
+            }
+
+            if (!planta) {
+                alert('Por favor seleccione una planta asignada.');
+                document.getElementById('guardiaPlanta').focus();
+                return;
+            }
+
+            // Limpiar formulario
+            document.getElementById('guardiaNombre').value = '';
+            document.getElementById('guardiaUsuario').value = '';
+            document.getElementById('guardiaPassword').value = '';
+            document.getElementById('guardiaPlanta').value = '';
+
+            showModal('userCreatedModal');
+        }
+
+        // Flatpickr trabajador (futuro) y autorización
+        const today = new Date();
+        const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+        flatpickr("#workerPickupDate", { dateFormat: "Y-m-d", minDate: tomorrow, locale: "es" });
+        flatpickr("#authDate", { dateFormat: "Y-m-d", minDate: today, locale: "es" });
+
+        // Acciones del Trabajador
+        function workerConfirmToday() {
+            localStorage.setItem('worker.confirmToday', new Date().toISOString().slice(0,10));
+            document.getElementById('confirmTodayInfo').classList.remove('d-none');
+            document.getElementById('workerModalTitle').textContent = 'Confirmación registrada';
+            document.getElementById('workerModalMsg').textContent = 'Has confirmado que retirarás tu caja HOY.';
+            showModal('workerModal');
+        }
+        function workerSchedulePickup() {
+            const val = document.getElementById('workerPickupDate').value;
+            if (!val) { alert('Selecciona una fecha futura para agendar.'); return; }
+            localStorage.setItem('worker.scheduledDate', val);
+            document.getElementById('scheduledInfo').classList.remove('d-none');
+            document.getElementById('workerModalTitle').textContent = 'Fecha agendada';
+            document.getElementById('workerModalMsg').textContent = `Agendaste el retiro para el ${val}.`;
+            showModal('workerModal');
+        }
+        function workerAuthorizeThirdParty() {
+            const name = document.getElementById('authName').value.trim();
+            const rut = document.getElementById('authRut').value.trim();
+            const date = document.getElementById('authDate').value.trim();
+            const onlyOnce = document.getElementById('authOnlyOnce').checked;
+            if (!name || !rut || !date) { alert('Completa nombre, RUT y fecha autorizada.'); return; }
+            localStorage.setItem('worker.auth', JSON.stringify({ name, rut, date, onlyOnce }));
+            document.getElementById('authorizedInfo').classList.remove('d-none');
+            document.getElementById('workerModalTitle').textContent = 'Autorización registrada';
+            document.getElementById('workerModalMsg').textContent = `Autorizaste a ${name} (${rut}) para retirar el ${date}${onlyOnce ? ' (solo por esa fecha).' : '.'}`;
+            showModal('workerModal');
+        }
+
+        // Restaurar sesión al cargar la página
+        function restoreSession() {
+            const savedRole = localStorage.getItem('session.role');
+            const savedUsername = localStorage.getItem('session.username');
+            const savedPlant = localStorage.getItem('session.plant');
+            const savedName = localStorage.getItem('session.name');
+
+            if (savedRole && savedUsername) {
+                // Validar que el usuario aún existe en la base de datos
+                const user = validUsers[savedUsername.toLowerCase()];
+                if (!user || user.role !== savedRole) {
+                    // Usuario ya no válido, limpiar sesión
+                    logout();
+                    return;
+                }
+
+                // Restaurar valores en los campos del login
+                document.getElementById('username').value = savedUsername;
+                if (savedPlant) {
+                    document.getElementById('plant').value = savedPlant;
+                    selectPlant(savedPlant); // Restaurar selección visual del botón
+                }
+                document.getElementById('role').value = savedRole;
+
+                // Simular login automático
+                currentRole = savedRole;
+                const container = document.querySelector('.phone-container');
+                const parentContainer = document.querySelector('.container');
+
+                if (savedRole === 'admin') {
+                    container.classList.add('desktop-mode');
+                    parentContainer.classList.add('desktop-mode-parent');
+                    showScreen('adminHomeScreen');
+                } else if (savedRole === 'guardia') {
+                    container.classList.remove('desktop-mode');
+                    parentContainer.classList.remove('desktop-mode-parent');
+                    showScreen('guardiaHomeScreen');
+                } else if (savedRole === 'trabajador') {
+                    container.classList.remove('desktop-mode');
+                    parentContainer.classList.remove('desktop-mode-parent');
+                    showScreen('trabajadorHomeScreen');
+                    document.getElementById('profileName').textContent = savedName || user.name;
+                    document.getElementById('profileRole').textContent = 'Colaborador/a';
+                }
+            } else {
+                // No hay sesión guardada, mostrar login
+                renderFooterForRole('loginScreen');
+            }
+        }
+
+        // Ejecutar restauración de sesión al cargar
+        restoreSession();
+    </script>
+</body>
+</html>

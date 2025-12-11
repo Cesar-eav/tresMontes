@@ -1,0 +1,51 @@
+{% extends '../base.html' %}
+{% block title %}Lista Diaria{% endblock %}
+{% block content %}
+<div class="header"><h2>Lista Diaria de Entregas</h2></div>
+<div class="content">
+    {% if campana_activa %}
+    <div class="card">
+        <div class="card-header"><i class="bi bi-funnel me-2"></i> Filtros</div>
+        <div class="card-body">
+            <form method="GET" class="row g-2">
+                <div class="col-6"><select name="filtro_tipo" class="form-control" onchange="this.form.submit()"><option value="todos" {% if filtro_tipo == 'todos' %}selected{% endif %}>Todos</option><option value="planta" {% if filtro_tipo == 'planta' %}selected{% endif %}>Planta</option><option value="contratista" {% if filtro_tipo == 'contratista' %}selected{% endif %}>Contratista</option></select></div>
+                <div class="col-6"><input type="text" name="busqueda" class="form-control" placeholder="Buscar por nombre o RUT..." value="{{ busqueda }}"></div>
+            </form>
+        </div>
+    </div>
+    <div class="stats-container">
+        <div class="stat-card"><div class="stat-number">{{ total_beneficiarios }}</div><div class="stat-label">Total</div></div>
+        <div class="stat-card"><div class="stat-number">{{ total_entregados }}</div><div class="stat-label">Entregados</div></div>
+        <div class="stat-card"><div class="stat-number">{{ total_pendientes }}</div><div class="stat-label">Pendientes</div></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><i class="bi bi-list-check me-2"></i> Beneficiarios ({{ total_beneficiarios }})</div>
+        <div class="card-body">
+            {% for item in beneficiarios %}
+            <div class="list-item">
+                <div><strong>{{ item.beneficiario.nombre }}</strong><div class="text-muted small">{{ item.beneficiario.rut }} | {{ item.beneficiario.get_tipo_contrato_display }} | {{ item.beneficiario.get_tipo_caja_display }}</div></div>
+                {% if item.tiene_retiro %}
+                <span class="status-badge status-delivered"><i class="bi bi-check-circle me-1"></i> Entregado</span>
+                {% else %}
+                <span class="status-badge status-pending"><i class="bi bi-clock me-1"></i> Pendiente</span>
+                {% endif %}
+            </div>
+            {% empty %}<p class="text-muted text-center">No hay beneficiarios</p>{% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i> No hay carga activa en este momento.</div>
+    {% endif %}
+</div>
+{% endblock %}
+{% block footer %}
+<div class="footer">
+    <a href="{% if request.user.perfil.rol == 'admin' %}{% url 'admin_home' %}{% else %}{% url 'guardia_home' %}{% endif %}" class="nav-item"><i class="bi bi-speedometer2"></i><span>Panel</span></a>
+    <a href="{% url 'lista_diaria' %}" class="nav-item active"><i class="bi bi-list-ul"></i><span>Lista</span></a>
+    {% if request.user.perfil.rol == 'admin' %}
+    <a href="{% url 'admin_reportes' %}" class="nav-item"><i class="bi bi-graph-up"></i><span>Reportes</span></a>
+    <a href="{% url 'admin_usuarios' %}" class="nav-item"><i class="bi bi-people-fill"></i><span>Usuarios</span></a>
+    {% endif %}
+    <a href="{% url 'perfil' %}" class="nav-item"><i class="bi bi-person-circle"></i><span>Perfil</span></a>
+</div>
+{% endblock %}
