@@ -1,0 +1,57 @@
+{% extends '../base.html' %}
+{% block title %}Escáner QR{% endblock %}
+{% block content %}
+<div class="header">
+    <a href="{% url 'guardia_home' %}" style="position: absolute; left: 15px; color: white;"><i class="bi bi-arrow-left"></i></a>
+    <h2>Escáner QR</h2>
+</div>
+<div class="content">
+    <div class="card">
+        <div class="card-header"><i class="bi bi-qr-code-scan me-2"></i> Escaneador</div>
+        <div class="card-body text-center">
+            <div id="qr-reader" style="width: 100%; max-width: 500px; margin: 0 auto;"></div>
+            <div id="qr-result" class="mt-3"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+function onScanSuccess(decodedText, decodedResult) {
+    console.log(`Código escaneado: ${decodedText}`);
+    html5QrcodeScanner.clear();
+    document.getElementById('qr-result').innerHTML = '<div class="alert alert-success"><strong>¡QR Detectado!</strong><br>RUT: ' + decodedText + '<br>Procesando...</div>';
+    setTimeout(function() {
+        window.location.href = `/guardia/buscar-rut/?rut=${decodedText}`;
+    }, 1000);
+}
+function onScanError(errorMessage) {
+    // Silenciar errores de escaneo continuo
+}
+
+// Configuración mejorada para detección
+const config = {
+    fps: 10,
+    qrbox: { width: 280, height: 280 },
+    aspectRatio: 1.0,
+    showTorchButtonIfSupported: true,
+    rememberLastUsedCamera: true,
+    videoConstraints: {
+        facingMode: "environment",
+        advanced: [
+            { focusMode: "continuous" },
+            { exposureMode: "continuous" },
+            { whiteBalanceMode: "continuous" }
+        ]
+    },
+    formatsToSupport: [ 0 ] // Solo QR Code
+};
+
+const html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", config);
+html5QrcodeScanner.render(onScanSuccess, onScanError);
+
+// Mostrar instrucciones
+document.getElementById('qr-result').innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle"></i> Apunte la cámara al código QR<br><small>Ajuste la distancia y el ángulo si es necesario</small></div>';
+</script>
+{% endblock %}

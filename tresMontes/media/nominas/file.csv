@@ -1,0 +1,11 @@
+nombre,rut,tipo_contrato,tipo_caja,campana_id,planta_id
+Juan,12345678-9,fijo,A,1,1
+María,13456789-0,indefinido,B,1,1
+Carlos,14567890-1,fijo,A,1,1
+Ana,15678901-2,fijo,A,1,1
+Pedro,16789012-3,indefinido,B,1,1
+Laura,17890123-4,indefinido,B,1,1
+Javier,18901234-5,fijo,A,1,1
+Fernanda,19012345-6,fijo,A,1,1
+Ricardo,20123456-7,fijo,A,1,1
+Isabel,21234567-8,indefinido,B,1,1

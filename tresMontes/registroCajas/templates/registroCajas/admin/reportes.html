@@ -1,0 +1,41 @@
+{% extends '../base.html' %}
+{% block title %}Reportes{% endblock %}
+{% block content %}
+<div class="header"><h2>Reportes y Estadísticas</h2></div>
+<div class="content">
+    <div class="form-group">
+        <label>Filtrar por Período</label>
+        <select class="form-control" onchange="window.location.href='?periodo='+this.value">
+            <option value="hoy" {% if periodo == 'hoy' %}selected{% endif %}>Hoy</option>
+            <option value="semana" {% if periodo == 'semana' %}selected{% endif %}>Esta Semana</option>
+            <option value="mes" {% if periodo == 'mes' %}selected{% endif %}>Este Mes</option>
+            <option value="anio" {% if periodo == 'anio' %}selected{% endif %}>Este Año</option>
+        </select>
+    </div>
+    <div class="stats-container">
+        <div class="stat-card"><div class="stat-number">{{ tasa_entrega }}%</div><div class="stat-label">Tasa Entrega</div></div>
+        <div class="stat-card"><div class="stat-number">{{ total_entregados }}</div><div class="stat-label">Entregados</div></div>
+        <div class="stat-card"><div class="stat-number">{{ total_pendientes }}</div><div class="stat-label">Pendientes</div></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><i class="bi bi-calendar-event me-2"></i> Cargas en el Período</div>
+        <div class="card-body">
+            {% for campana in campanas %}
+            <div class="list-item">
+                <div><strong>{{ campana.nombre }}</strong><div class="text-muted small">{{ campana.fecha_inicio|date:"d/m/Y" }} - {{ campana.fecha_fin|date:"d/m/Y" }}</div></div>
+                <span class="badge bg-success">{{ campana.total_beneficiarios }} benef.</span>
+            </div>
+            {% empty %}<p class="text-muted text-center">No hay cargas en este período</p>{% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block footer %}
+<div class="footer">
+    <a href="{% url 'admin_home' %}" class="nav-item"><i class="bi bi-speedometer2"></i><span>Panel</span></a>
+    <a href="{% url 'lista_diaria' %}" class="nav-item"><i class="bi bi-list-ul"></i><span>Lista</span></a>
+    <a href="{% url 'admin_reportes' %}" class="nav-item active"><i class="bi bi-graph-up"></i><span>Reportes</span></a>
+    <a href="{% url 'admin_usuarios' %}" class="nav-item"><i class="bi bi-people-fill"></i><span>Usuarios</span></a>
+    <a href="{% url 'perfil' %}" class="nav-item"><i class="bi bi-person-circle"></i><span>Perfil</span></a>
+</div>
+{% endblock %}

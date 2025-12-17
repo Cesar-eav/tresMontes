@@ -1,0 +1,59 @@
+{% extends '../base.html' %}
+{% block title %}Mi Caja{% endblock %}
+{% block content %}
+<div class="header"><h2>Mi Caja</h2></div>
+<div class="content">
+    <div class="card">
+        <div class="card-header"><i class="bi bi-person-circle me-2"></i> Mi Información</div>
+        <div class="card-body">
+            <h5>{{ perfil.nombre_completo }}</h5>
+            <p class="text-muted mb-2">{{ perfil.rut }}</p>
+            <p class="small text-muted">{{ planta.nombre }}</p>
+        </div>
+    </div>
+    {% if beneficiario %}
+    <div class="card">
+        <div class="card-header"><i class="bi bi-gift me-2"></i> Estado de mi Caja</div>
+        <div class="card-body">
+            <h6>{{ beneficiario.campana.nombre }}</h6>
+            <p class="text-muted small">Período: {{ beneficiario.campana.fecha_inicio|date:"d/m/Y" }} - {{ beneficiario.campana.fecha_fin|date:"d/m/Y" }}</p>
+            <div class="mb-3"><span class="badge bg-info">{{ beneficiario.get_tipo_contrato_display }}</span> <span class="badge bg-secondary">{{ beneficiario.get_tipo_caja_display }}</span></div>
+            {% if beneficiario.tiene_retiro %}
+            <div class="alert alert-success"><i class="bi bi-check-circle-fill me-2"></i><strong>¡Caja Entregada!</strong><br><small>Retirada el {{ beneficiario.retiro.fecha_hora|date:"d/m/Y H:i" }}</small></div>
+            {% else %}
+            <div class="alert alert-warning"><i class="bi bi-hourglass-split me-2"></i><strong>Pendiente de Retiro</strong><br><small>Puede retirar su caja en portería</small></div>
+            {% endif %}
+        </div>
+    </div>
+    {% if not beneficiario.tiene_retiro %}
+    <div class="card">
+        <div class="card-header"><i class="bi bi-qr-code me-2"></i> Código QR</div>
+        <div class="card-body text-center">
+            <div id="qrcode" style="display: inline-block;"></div>
+            <p class="text-muted small mt-2">Muestre este código en portería</p>
+        </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i> No tiene cajas asignadas en este momento.</div>
+    {% endif %}
+</div>
+{% endblock %}
+{% block footer %}
+<div class="footer">
+    <a href="{% url 'trabajador_home' %}" class="nav-item active"><i class="bi bi-house"></i><span>Inicio</span></a>
+    <a href="{% url 'perfil' %}" class="nav-item"><i class="bi bi-person-circle"></i><span>Perfil</span></a>
+</div>
+{% endblock %}
+{% block extra_js %}
+{% if beneficiario and not beneficiario.tiene_retiro %}
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+new QRCode(document.getElementById("qrcode"), {
+    text: "{{ beneficiario.rut }}",
+    width: 200,
+    height: 200
+});
+</script>
+{% endif %}
+{% endblock %}

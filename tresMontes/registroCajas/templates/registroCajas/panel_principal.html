@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Principal - Tres Montes</title>
+    <link rel="stylesheet" href="{% static 'css/panel.css' %}">
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1>Panel Principal</h1>
+            <div class="user-icon">
+                <i class="fas fa-user-circle"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Estadísticas -->
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-number">{{ entregas_hoy }}</div>
+                <div class="stat-label">Entregas Hoy</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">{{ pendientes }}</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="action-buttons">
+            <button class="btn-action">
+                <i class="fas fa-qrcode"></i>
+                Escanear QR
+            </button>
+            
+            <p class="action-text">Presione el botón para activar el escáner</p>
+            
+            <button class="btn-action">
+                <i class="fas fa-camera"></i>
+                Abrir Escáner
+            </button>
+            
+            <button class="btn-action">
+                <i class="fas fa-id-card"></i>
+                Entregar por RUT
+            </button>
+        </div>
+
+        <!-- Entregas Recientes -->
+        <div class="recent-section">
+            <div class="section-header">
+                <i class="fas fa-list"></i>
+                Entregas Recientes
+            </div>
+            
+            <div class="recent-list">
+                {% for entrega in entregas_recientes %}
+                <div class="recent-item">
+                    <span class="recent-name">{{ entrega.nombre }}</span>
+                    <span class="badge badge-{{ entrega.estado }}">
+                        {% if entrega.estado == 'entregado' %}
+                            Entregado
+                        {% else %}
+                            Pendiente
+                        {% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Navigation -->
+    <footer class="footer-nav">
+        <a href="{% url 'panel_principal' %}" class="nav-item active">
+            <i class="fas fa-home"></i>
+            <span>Inicio</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fas fa-list"></i>
+            <span>Entregas</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Perfil</span>
+        </a>
+    </footer>
+</body>
+</html>

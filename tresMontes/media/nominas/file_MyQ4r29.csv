@@ -1,0 +1,26 @@
+nombre,rut,tipo_contrato,tipo_caja,campana_id,planta_id
+Roberto,16543210-9,indefinido,Los Andes,2,1
+Claudia,17234567-8,plazo fijo,Caja 18,3,2
+Fernando,18876543-2,indefinido,La Araucana,1,3
+Patricia,19123456-7,plazo fijo,Los Héroes,2,1
+Miguel,15987654-3,indefinido,Los Andes,3,2
+Carmen,14567890-1,plazo fijo,Caja 18,1,3
+Jorge,13456789-0,indefinido,La Araucana,2,1
+Andrea,12345678-9,plazo fijo,Los Héroes,3,2
+Javier,11223344-5,indefinido,Los Andes,1,3
+Sofía,10998877-6,plazo fijo,Caja 18,2,1
+Luis,20001122-3,indefinido,La Araucana,3,2
+Valeria,21112233-4,plazo fijo,Los Héroes,1,3
+Martín,22223344-5,indefinido,Los Andes,2,1
+Paula,23334455-6,plazo fijo,Caja 18,3,2
+Diego,24445566-7,indefinido,La Araucana,1,3
+Elena,25556677-8,plazo fijo,Los Héroes,2,1
+Felipe,26667788-9,indefinido,Los Andes,3,2
+Camila,27778899-0,plazo fijo,Caja 18,1,3
+Gabriel,28889900-1,indefinido,La Araucana,2,1
+Natalia,29990011-2,plazo fijo,Los Héroes,3,2
+Héctor,30001122-3,indefinido,Los Andes,1,3
+Adriana,31112233-4,plazo fijo,Caja 18,2,1
+Sebastián,32223344-5,indefinido,La Araucana,3,2
+Ignacia,33334455-6,plazo fijo,Los Héroes,1,3
+Mauricio,34445566-7,indefinido,Los Andes,2,2

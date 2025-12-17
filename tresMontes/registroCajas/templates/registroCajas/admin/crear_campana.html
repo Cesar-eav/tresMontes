@@ -1,0 +1,112 @@
+{% extends '../base.html' %}
+
+{% block title %}Nueva Carga - Tres Montes{% endblock %}
+
+{% block content %}
+<div class="header">
+    <a href="{% url 'admin_home' %}" style="position: absolute; left: 15px; color: white; text-decoration: none;">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <h2>Nueva Carga de Nómina</h2>
+</div>
+
+<div class="content">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-calendar-date me-2"></i> Detalles de la Carga
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="nombre">Nombre de la Carga</label>
+                    <input type="text" id="nombre" name="nombre" class="form-control"
+                           placeholder="Ej: Entrega Navidad 2025" value="Entrega {{ fecha_inicio_sugerida|date:'F Y' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="fecha_inicio" class="fw-bold">Fecha Inicio *</label>
+                    <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control"
+                           value="{{ fecha_inicio_sugerida|date:'Y-m-d' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="fecha_fin" class="fw-bold">Fecha Fin *</label>
+                    <input type="date" id="fecha_fin" name="fecha_fin" class="form-control"
+                           value="{{ fecha_fin_sugerida|date:'Y-m-d' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Planta</label>
+                    <input type="text" class="form-control" value="{{ planta.nombre }}" disabled>
+                    <small class="text-muted">La planta se asigna automáticamente según tu sesión</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="dias_bloqueados">Bloquear Días (opcional)</label>
+                    <input type="text" id="dias_bloqueados" name="dias_bloqueados_input" class="form-control"
+                           placeholder="Selecciona días a bloquear">
+                    <input type="hidden" id="dias_bloqueados_hidden" name="dias_bloqueados">
+                    <small class="text-muted">Días en los que NO se podrá retirar</small>
+                    <div id="dias-chips" class="mt-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-file-earmark-excel me-2"></i> Cargar Nómina de Beneficiarios
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="archivo_nomina">Archivo de Nómina *</label>
+                    <input type="file" id="archivo_nomina" name="archivo_nomina" class="form-control"
+                           accept=".xlsx,.xls,.csv" required>
+                    <small class="text-muted d-block">Formatos: Excel (.xlsx, .xls) o CSV (.csv)</small>
+                    <small class="text-muted d-block"><strong>Columnas requeridas (9 columnas):</strong></small>
+                    <small class="text-muted d-block">RUT | EMPLEADO | NOMBRES | APELLIDOS | CARGO | TIPO DE CONTRATO | PERIODO | SEDE | ESTADO</small>
+                    <small class="text-muted d-block">Delimitador: Tabulador (TAB) o Coma (,)</small>
+                    <small class="text-muted d-block">Tipos de contrato: "Indefinido" = Planta, "Plazo Fijo" = Contratista</small>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-check-circle me-2"></i> Crear y Activar Carga
+        </button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Flatpickr para días bloqueados
+let diasBloqueados = [];
+const fp = flatpickr("#dias_bloqueados", {
+    mode: "multiple",
+    dateFormat: "Y-m-d",
+    locale: "es",
+    onChange: function(selectedDates) {
+        diasBloqueados = selectedDates.map(d => fp.formatDate(d, "Y-m-d"));
+        document.getElementById('dias_bloqueados_hidden').value = JSON.stringify(diasBloqueados);
+
+        // Mostrar chips
+        const container = document.getElementById('dias-chips');
+        container.innerHTML = '';
+        diasBloqueados.forEach(fecha => {
+            const chip = document.createElement('span');
+            chip.className = 'badge bg-warning text-dark me-2';
+            chip.textContent = fp.formatDate(new Date(fecha), "d/m/Y");
+            container.appendChild(chip);
+        });
+    }
+});
+</script>
+{% endblock %}

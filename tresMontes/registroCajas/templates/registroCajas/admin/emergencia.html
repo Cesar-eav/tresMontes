@@ -1,0 +1,43 @@
+{% extends '../base.html' %}
+{% block title %}Sistema de Emergencia{% endblock %}
+{% block content %}
+<div class="header"><h2>Sistema de Emergencia</h2></div>
+<div class="content">
+    {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }}">{{ message }}</div>{% endfor %}{% endif %}
+    {% if campana_activa %}
+    <div class="card">
+        <div class="card-header"><i class="bi bi-exclamation-triangle me-2"></i> Bloquear Día</div>
+        <div class="card-body">
+            <form method="POST">{% csrf_token %}
+                <div class="form-group"><label>Fecha a Bloquear *</label><input type="date" name="fecha" class="form-control" min="{{ campana_activa.fecha_inicio|date:'Y-m-d' }}" max="{{ campana_activa.fecha_fin|date:'Y-m-d' }}" required></div>
+                <div class="form-group"><label>Motivo *</label><select name="motivo" class="form-control" required><option value="emergencia">Emergencia</option><option value="feriado">Feriado</option><option value="mantenimiento">Mantenimiento</option><option value="otro">Otro</option></select></div>
+                <div class="form-group"><label>Descripción</label><textarea name="descripcion" class="form-control" rows="3" placeholder="Descripción opcional del motivo..."></textarea></div>
+                <button type="submit" class="btn btn-danger w-100"><i class="bi bi-shield-x me-2"></i> Bloquear Día</button>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><i class="bi bi-calendar-x me-2"></i> Días Bloqueados ({{ dias_bloqueados.count }})</div>
+        <div class="card-body">
+            {% for bloqueo in dias_bloqueados %}
+            <div class="list-item">
+                <div><strong>{{ bloqueo.fecha|date:"d/m/Y" }}</strong><div class="text-muted small">{{ bloqueo.get_motivo_display }} | Por: {{ bloqueo.bloqueado_por.perfil.nombre_completo }}</div></div>
+                <a href="{% url 'admin_eliminar_bloqueo' bloqueo.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar bloqueo?')"><i class="bi bi-trash"></i></a>
+            </div>
+            {% empty %}<p class="text-muted text-center">No hay días bloqueados</p>{% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-warning"><i class="bi bi-info-circle me-2"></i> No hay carga activa. Active una carga para usar el sistema de emergencia.</div>
+    {% endif %}
+</div>
+{% endblock %}
+{% block footer %}
+<div class="footer">
+    <a href="{% url 'admin_home' %}" class="nav-item"><i class="bi bi-speedometer2"></i><span>Panel</span></a>
+    <a href="{% url 'lista_diaria' %}" class="nav-item"><i class="bi bi-list-ul"></i><span>Lista</span></a>
+    <a href="{% url 'admin_reportes' %}" class="nav-item"><i class="bi bi-graph-up"></i><span>Reportes</span></a>
+    <a href="{% url 'admin_usuarios' %}" class="nav-item"><i class="bi bi-people-fill"></i><span>Usuarios</span></a>
+    <a href="{% url 'perfil' %}" class="nav-item"><i class="bi bi-person-circle"></i><span>Perfil</span></a>
+</div>
+{% endblock %}

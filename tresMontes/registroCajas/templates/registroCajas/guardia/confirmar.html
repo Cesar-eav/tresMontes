@@ -1,0 +1,34 @@
+{% extends '../base.html' %}
+{% block title %}Confirmar Entrega{% endblock %}
+{% block content %}
+<div class="header">
+    <a href="{% url 'guardia_buscar_rut' %}" style="position: absolute; left: 15px; color: white;"><i class="bi bi-arrow-left"></i></a>
+    <h2>Confirmar Entrega</h2>
+</div>
+<div class="content">
+    {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }}">{{ message }}</div>{% endfor %}{% endif %}
+    <div class="card">
+        <div class="card-header"><i class="bi bi-person me-2"></i> Datos del Beneficiario</div>
+        <div class="card-body">
+            <h5>{{ beneficiario.nombre }}</h5>
+            <p class="text-muted mb-2">{{ beneficiario.rut }}</p>
+            <div class="mb-3"><span class="badge bg-info">{{ beneficiario.get_tipo_contrato_display }}</span> <span class="badge bg-secondary">{{ beneficiario.get_tipo_caja_display }}</span></div>
+            <p><strong>Carga:</strong> {{ beneficiario.campana.nombre }}</p>
+        </div>
+    </div>
+    <form method="POST">{% csrf_token %}
+        <div class="card">
+            <div class="card-header"><i class="bi bi-clipboard-check me-2"></i> Confirmación</div>
+            <div class="card-body">
+                <div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="retira_titular" name="retira_titular" checked onchange="document.getElementById('autorizacion-form').style.display = this.checked ? 'none' : 'block'"><label class="form-check-label" for="retira_titular">Retira el titular</label></div>
+                <div id="autorizacion-form" style="display: none;">
+                    <div class="form-group"><label>Nombre de quien retira</label><input type="text" name="nombre_tercero" class="form-control"></div>
+                    <div class="form-group"><label>RUT de quien retira</label><input type="text" name="rut_tercero" class="form-control" placeholder="12345678-9"></div>
+                </div>
+                <div class="form-group"><label>Observaciones (opcional)</label><textarea name="observaciones" class="form-control" rows="3"></textarea></div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle me-2"></i> Confirmar Entrega</button>
+    </form>
+</div>
+{% endblock %}

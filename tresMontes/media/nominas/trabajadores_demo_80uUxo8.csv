@@ -1,0 +1,21 @@
+RUT EMPLEADO,NOMBRES,APELLIDOS,CARGO,TIPO DE CONTRATO,PERIODO,SEDE,ESTADO
+11.111.111-1,Juan,Pérez,Supervisor,Indefinido,2024,Santiago,PENDIENTE
+12.222.222-2,Ana,García,Operaria,Plazo Fijo,2024,Valparaíso,PENDIENTE
+13.333.333-3,Carlos,Lagos,Bodeguero,Indefinido,2024,Rancagua,RETIRADO
+14.444.444-4,María,Silva,Administrativa,Plazo Fijo,2024,Santiago,PENDIENTE
+15.555.555-5,Pedro,Rojas,Conductor,Indefinido,2024,Concepción,PENDIENTE
+16.666.666-6,Camila,Ortiz,Asistente RRHH,Indefinido,2024,Santiago,RETIRADO
+17.777.777-7,Nicolás,Farias,Técnico,Plazo Fijo,2024,Curicó,PENDIENTE
+18.888.888-8,Daniela,Muñoz,Encargada Logística,Indefinido,2024,Santiago,PENDIENTE
+19.999.999-9,Tomás,Reyes,Operario,Plazo Fijo,2024,Magallanes,PENDIENTE
+20.000.000-0,Sofía,Castro,Analista,Indefinido,2024,Antofagasta,RETIRADO
+21.111.111-1,Andrés,López,Supervisor,Indefinido,2024,La Serena,PENDIENTE
+22.222.222-2,Valentina,Herrera,Operaria,Plazo Fijo,2024,Viña del Mar,PENDIENTE
+23.333.333-3,Rodrigo,Soto,Prevencionista,Indefinido,2024,Santiago,PENDIENTE
+24.444.444-4,Francisca,Álvarez,Administrativa,Indefinido,2024,Chillán,RETIRADO
+25.555.555-5,Matías,Bustos,Conductor,Plazo Fijo,2024,Santiago,PENDIENTE
+26.666.666-6,Javiera,Pizarro,Secretaria,Indefinido,2024,Valparaíso,PENDIENTE
+27.777.777-7,Diego,Gutiérrez,Técnico,Indefinido,2024,Santiago,RETIRADO
+28.888.888-8,Constanza,Fuentes,Operaria,Plazo Fijo,2024,Concepción,PENDIENTE
+29.999.999-9,Felipe,Araya,Bodeguero,Indefinido,2024,Rancagua,PENDIENTE
+30.000.000-0,Isidora,Vega,Analista,Indefinido,2024,Santiago,PENDIENTE

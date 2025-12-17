@@ -1,0 +1,37 @@
+{% extends '../base.html' %}
+{% block title %}Mi Perfil{% endblock %}
+{% block content %}
+<div class="header"><h2>Mi Perfil</h2></div>
+<div class="content">
+    <div class="card">
+        <div class="card-header"><i class="bi bi-person-circle me-2"></i> Información Personal</div>
+        <div class="card-body">
+            <div class="mb-3"><strong>Nombre Completo:</strong><div class="text-muted">{{ perfil.nombre_completo }}</div></div>
+            <div class="mb-3"><strong>Usuario:</strong><div class="text-muted">{{ perfil.user.username }}</div></div>
+            {% if perfil.rut %}<div class="mb-3"><strong>RUT:</strong><div class="text-muted">{{ perfil.rut }}</div></div>{% endif %}
+            {% if perfil.user.email %}<div class="mb-3"><strong>Email:</strong><div class="text-muted">{{ perfil.user.email }}</div></div>{% endif %}
+            <div class="mb-3"><strong>Rol:</strong><div class="text-muted">{{ perfil.get_rol_display }}</div></div>
+            {% if planta %}<div class="mb-3"><strong>Planta:</strong><div class="text-muted">{{ planta.nombre }}</div></div>{% endif %}
+        </div>
+    </div>
+    <a href="{% url 'logout' %}" class="btn btn-danger w-100"><i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión</a>
+</div>
+{% endblock %}
+{% block footer %}
+<div class="footer">
+    {% if perfil.rol == 'admin' %}
+    <a href="{% url 'admin_home' %}" class="nav-item"><i class="bi bi-speedometer2"></i><span>Panel</span></a>
+    <a href="{% url 'lista_diaria' %}" class="nav-item"><i class="bi bi-list-ul"></i><span>Lista</span></a>
+    <a href="{% url 'admin_reportes' %}" class="nav-item"><i class="bi bi-graph-up"></i><span>Reportes</span></a>
+    <a href="{% url 'admin_usuarios' %}" class="nav-item"><i class="bi bi-people-fill"></i><span>Usuarios</span></a>
+    <a href="{% url 'perfil' %}" class="nav-item active"><i class="bi bi-person-circle"></i><span>Perfil</span></a>
+    {% elif perfil.rol == 'guardia' %}
+    <a href="{% url 'guardia_home' %}" class="nav-item"><i class="bi bi-speedometer2"></i><span>Panel</span></a>
+    <a href="{% url 'lista_diaria' %}" class="nav-item"><i class="bi bi-list-ul"></i><span>Lista</span></a>
+    <a href="{% url 'perfil' %}" class="nav-item active"><i class="bi bi-person-circle"></i><span>Perfil</span></a>
+    {% else %}
+    <a href="{% url 'trabajador_home' %}" class="nav-item"><i class="bi bi-house"></i><span>Inicio</span></a>
+    <a href="{% url 'perfil' %}" class="nav-item active"><i class="bi bi-person-circle"></i><span>Perfil</span></a>
+    {% endif %}
+</div>
+{% endblock %}
