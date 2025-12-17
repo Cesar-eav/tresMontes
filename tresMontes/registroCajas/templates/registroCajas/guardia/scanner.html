@@ -21,10 +21,10 @@
 function onScanSuccess(decodedText, decodedResult) {
     console.log(`Código escaneado: ${decodedText}`);
     html5QrcodeScanner.clear();
-    document.getElementById('qr-result').innerHTML = '<div class="alert alert-success"><strong>¡QR Detectado!</strong><br>RUT: ' + decodedText + '<br>Procesando...</div>';
+    document.getElementById('qr-result').innerHTML = '<div class="alert alert-success"><strong>¡QR Detectado!</strong><br>RUT: ' + decodedText + '<br>Registrando entrega...</div>';
     setTimeout(function() {
-        window.location.href = `/guardia/buscar-rut/?rut=${decodedText}`;
-    }, 1000);
+        window.location.href = `/guardia/buscar-rut/?rut=${decodedText}&auto=1`;
+    }, 800);
 }
 function onScanError(errorMessage) {
     // Silenciar errores de escaneo continuo

@@ -60,6 +60,7 @@ def guardia_buscar_rut(request):
 
     beneficiario = None
     rut_buscado = request.GET.get('rut', '').strip()
+    desde_scanner = request.GET.get('auto', '') == '1'  # Parámetro para identificar escaneo QR
 
     if rut_buscado and campana_activa:
         # Buscar beneficiario en la campaña activa
@@ -68,6 +69,28 @@ def guardia_buscar_rut(request):
                 rut=rut_buscado,
                 campana=campana_activa
             )
+
+            # Si viene desde el scanner QR, registrar automáticamente
+            if desde_scanner and beneficiario:
+                # Verificar si ya tiene retiro
+                if beneficiario.tiene_retiro():
+                    messages.warning(request, f'La caja de {beneficiario.nombre} ya fue entregada anteriormente')
+                    return redirect('guardia_scanner')
+
+                # Crear retiro automáticamente
+                retiro = Retiro.objects.create(
+                    beneficiario=beneficiario,
+                    fecha_hora=timezone.now(),
+                    confirmado_por=request.user,
+                    observaciones='Entrega registrada mediante escaneo QR'
+                )
+
+                # Guardar datos en sesión para el popup
+                request.session['codigo_caja_entregada'] = retiro.codigo_caja
+                request.session['nombre_beneficiario'] = beneficiario.nombre
+
+                return redirect('guardia_confirmar_exitoso')
+
         except Beneficiario.DoesNotExist:
             messages.error(request, f'No se encontró beneficiario con RUT {rut_buscado} en la carga activa')
 
