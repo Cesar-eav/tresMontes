@@ -8,7 +8,10 @@
         <div class="card-header"><i class="bi bi-funnel me-2"></i> Filtros</div>
         <div class="card-body">
             <form method="GET" class="row g-2">
-                <div class="col-6"><select name="filtro_tipo" class="form-control" onchange="this.form.submit()"><option value="todos" {% if filtro_tipo == 'todos' %}selected{% endif %}>Todos</option><option value="planta" {% if filtro_tipo == 'planta' %}selected{% endif %}>Planta</option><option value="contratista" {% if filtro_tipo == 'contratista' %}selected{% endif %}>Contratista</option></select></div>
+                <div class="col-6"><select name="filtro_tipo" class="form-control" onchange="this.form.submit()">
+                    <option value="todos" {% if filtro_tipo == 'todos' %}selected{% endif %}>Todos</option>
+                    <option value="indefinido" {% if filtro_tipo == 'indefinido' %}selected{% endif %}>Indefinido</option>
+                    <option value="fijo" {% if filtro_tipo == 'fijo' %}selected{% endif %}>Fijo</option></select></div>
                 <div class="col-6"><input type="text" id="busqueda_lista_diaria" name="busqueda" class="form-control" placeholder="Buscar por nombre o RUT..." value="{{ busqueda }}"></div>
             </form>
         </div>
