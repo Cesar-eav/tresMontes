@@ -21,20 +21,20 @@ from datetime import datetime, timedelta
 @admin_required
 def admin_crear_campana(request):
     """Vista para crear una nueva carga de nómina"""
-    planta_codigo = request.session.get('planta_codigo')
-    planta = get_object_or_404(Planta, codigo=planta_codigo)
-
     if request.method == 'POST':
         nombre = request.POST.get('nombre', f'Entrega {timezone.now().strftime("%B %Y")}')
+        planta_id = request.POST.get('planta')
         fecha_inicio = request.POST.get('fecha_inicio')
         fecha_fin = request.POST.get('fecha_fin')
         archivo_nomina = request.FILES.get('archivo_nomina')
         dias_bloqueados_str = request.POST.get('dias_bloqueados', '')
 
         # Validaciones
-        if not all([fecha_inicio, fecha_fin]):
-            messages.error(request, 'Las fechas de inicio y fin son obligatorias')
+        if not all([fecha_inicio, fecha_fin, planta_id]):
+            messages.error(request, 'Las fechas de inicio, fin y la planta son obligatorias')
             return redirect('admin_crear_campana')
+
+        planta = get_object_or_404(Planta, id=planta_id)
 
         if not archivo_nomina:
             messages.error(request, 'Debe subir un archivo con la nómina de beneficiarios')
@@ -100,13 +100,15 @@ def admin_crear_campana(request):
 
         return redirect('admin_home')
 
+    # GET
+    plantas = Planta.objects.filter(activa=True)
     # Obtener rango de fechas sugerido
     hoy = timezone.now().date()
     fecha_inicio_sugerida = hoy
     fecha_fin_sugerida = hoy + timedelta(days=30)
 
     context = {
-        'planta': planta,
+        'plantas': plantas,
         'fecha_inicio_sugerida': fecha_inicio_sugerida,
         'fecha_fin_sugerida': fecha_fin_sugerida,
     }
@@ -233,23 +235,38 @@ def admin_reportes(request):
         fecha_inicio = hoy.replace(month=1, day=1)
         fecha_fin = hoy
     else:
+        # Por defecto, si el periodo no es válido, mostrar 'hoy'
+        periodo = 'hoy'
         fecha_inicio = hoy
         fecha_fin = hoy
 
-    # Obtener campañas en el período
+    # Obtener campañas cuyo rango de fechas se solapa con el período seleccionado
     campanas = Campana.objects.filter(
         planta=planta,
         fecha_inicio__lte=fecha_fin,
         fecha_fin__gte=fecha_inicio
-    )
+    ).prefetch_related('beneficiarios')
 
-    # Estadísticas generales
-    total_beneficiarios = sum([c.total_beneficiarios() for c in campanas])
-    total_entregados = sum([c.total_entregados() for c in campanas])
-    total_pendientes = sum([c.total_pendientes() for c in campanas])
-    tasa_entrega = round((total_entregados / total_beneficiarios * 100) if total_beneficiarios > 0 else 0, 1)
+    # Total de beneficiarios de las campañas activas en el período
+    total_beneficiarios = Beneficiario.objects.filter(campana__in=campanas).count()
 
-    # Retiros en el período
+    # Total de entregados para TODAS las campañas activas (para tasa de entrega y pendientes)
+    total_entregados_historico = Retiro.objects.filter(beneficiario__campana__in=campanas).count()
+
+    # Total de entregados EN EL PERÍODO seleccionado (para el card de "Entregados")
+    total_entregados_periodo = Retiro.objects.filter(
+        beneficiario__campana__in=campanas,
+        fecha_hora__date__gte=fecha_inicio,
+        fecha_hora__date__lte=fecha_fin
+    ).count()
+    
+    # Los pendientes siempre son sobre el total
+    total_pendientes = total_beneficiarios - total_entregados_historico
+    
+    # La tasa de entrega también es sobre el total
+    tasa_entrega = round((total_entregados_historico / total_beneficiarios * 100) if total_beneficiarios > 0 else 0, 1)
+
+    # Retiros recientes en el período para la lista
     retiros = Retiro.objects.filter(
         beneficiario__campana__in=campanas,
         fecha_hora__date__gte=fecha_inicio,
@@ -262,7 +279,7 @@ def admin_reportes(request):
         'fecha_inicio': fecha_inicio,
         'fecha_fin': fecha_fin,
         'total_beneficiarios': total_beneficiarios,
-        'total_entregados': total_entregados,
+        'total_entregados': total_entregados_periodo, # <-- ESTE ES EL CAMBIO PRINCIPAL PARA LA UI
         'total_pendientes': total_pendientes,
         'tasa_entrega': tasa_entrega,
         'campanas': campanas,
@@ -334,11 +351,11 @@ def admin_eliminar_bloqueo(request, bloqueo_id):
     """Eliminar un día bloqueado"""
     bloqueo = get_object_or_404(DiaBloquedo, id=bloqueo_id)
 
-    # Verificar que pertenece a una campaña de la planta del usuario
-    planta_codigo = request.session.get('planta_codigo')
-    if bloqueo.campana.planta.codigo != planta_codigo:
-        messages.error(request, 'No tiene permisos para eliminar este bloqueo')
-        return redirect('admin_emergencia')
+    # Para el admin, se elimina la restricción de planta
+    # planta_codigo = request.session.get('planta_codigo')
+    # if bloqueo.campana.planta.codigo != planta_codigo:
+    #     messages.error(request, 'No tiene permisos para eliminar este bloqueo')
+    #     return redirect('admin_emergencia')
 
     fecha = bloqueo.fecha
     bloqueo.delete()
@@ -353,8 +370,8 @@ def lista_diaria(request):
     planta_codigo = request.session.get('planta_codigo')
     planta = get_object_or_404(Planta, codigo=planta_codigo)
 
-    # Obtener campaña activa
-    campana_activa = Campana.objects.filter(planta=planta, activa=True).first()
+    # Buscar CUALQUIER campaña activa
+    campana_activa = Campana.objects.filter(activa=True).order_by('-fecha_creacion').first()
 
     if not campana_activa:
         context = {
@@ -368,8 +385,12 @@ def lista_diaria(request):
     filtro_tipo = request.GET.get('filtro_tipo', 'todos')
     busqueda = request.GET.get('busqueda', '')
 
-    # Obtener beneficiarios filtrados por planta_id del usuario conectado
-    beneficiarios = campana_activa.beneficiarios.filter(planta=planta)
+    # Si es admin, ve todos los beneficiarios de la campaña. Si es guardia, solo los de su planta.
+    if request.user.perfil.rol == 'admin':
+        beneficiarios = campana_activa.beneficiarios.all()
+    else: # Guardia
+        beneficiarios = campana_activa.beneficiarios.filter(planta=planta)
+
 
     # Filtrar por tipo de contrato
     if filtro_tipo != 'todos':
@@ -427,10 +448,10 @@ def perfil(request):
 def admin_gestionar_cargas(request):
     """Vista para ver y gestionar todas las cargas"""
     planta_codigo = request.session.get('planta_codigo')
-    planta = get_object_or_404(Planta, codigo=planta_codigo)
+    planta = get_object_or_404(Planta, codigo=planta_codigo) # Se mantiene para mostrar la planta del admin
 
-    # Obtener todas las campañas de la planta, ordenadas por fecha
-    campanas = Campana.objects.filter(planta=planta).order_by('-fecha_inicio')
+    # Para el admin, obtener todas las campañas de TODAS las plantas
+    campanas = Campana.objects.all().select_related('planta', 'creado_por__perfil').order_by('-fecha_inicio')
 
     # Agregar información de beneficiarios a cada campaña
     campanas_info = []
@@ -443,7 +464,7 @@ def admin_gestionar_cargas(request):
         })
 
     context = {
-        'planta': planta,
+        'planta': planta, # La planta del admin se sigue mostrando
         'campanas_info': campanas_info,
     }
 
@@ -455,11 +476,11 @@ def admin_eliminar_carga(request, campana_id):
     """Vista para eliminar una carga completa"""
     campana = get_object_or_404(Campana, id=campana_id)
 
-    # Verificar que pertenece a la planta del usuario
-    planta_codigo = request.session.get('planta_codigo')
-    if campana.planta.codigo != planta_codigo:
-        messages.error(request, 'No tiene permisos para eliminar esta carga')
-        return redirect('admin_gestionar_cargas')
+    # Para el admin, se elimina la restricción de planta
+    # planta_codigo = request.session.get('planta_codigo')
+    # if campana.planta.codigo != planta_codigo:
+    #     messages.error(request, 'No tiene permisos para eliminar esta carga')
+    #     return redirect('admin_gestionar_cargas')
 
     if request.method == 'POST':
         nombre = campana.nombre
@@ -476,13 +497,9 @@ def admin_ver_detalle_carga(request, campana_id):
     """Vista para ver el detalle completo de una carga"""
     campana = get_object_or_404(Campana, id=campana_id)
 
-    # Verificar que pertenece a la planta del usuario
-    planta_codigo = request.session.get('planta_codigo')
-    planta = get_object_or_404(Planta, codigo=planta_codigo)
-
-    if campana.planta != planta:
-        messages.error(request, 'No tiene permisos para ver esta carga')
-        return redirect('admin_gestionar_cargas')
+    # Para el admin, se elimina la restricción de planta
+    # La planta se obtiene de la campaña para consistencia
+    planta = campana.planta
 
     # Obtener todos los beneficiarios
     beneficiarios = campana.beneficiarios.all().order_by('nombre')

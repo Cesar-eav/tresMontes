@@ -1,0 +1,68 @@
+<div class="footer">
+    {% if request.user.perfil.rol == 'admin' %}
+
+        <a href="{% url 'admin_usuarios' %}" class="nav-item {% if active_nav == 'usuarios' %}active{% endif %}">
+        <i class="bi bi-people-fill"></i>
+        <span>Usuarios</span>
+    </a>
+    <a href="{% url 'lista_diaria' %}" class="nav-item {% if active_nav == 'lista' %}active{% endif %}">
+        <i class="bi bi-list-ul"></i>
+        <span>Lista Día</span>
+    </a>
+    <a href="{% url 'admin_reportes' %}" class="nav-item {% if active_nav == 'reportes' %}active{% endif %}">
+        <i class="bi bi-graph-up"></i>
+        <span>Reportes</span>
+    </a>
+
+            <a href="{% url 'admin_home' %}"
+            class="nav-item nav-item-principal {% if active_nav == 'home' %}active{% endif %}">
+            <i class="bi bi-speedometer2"></i>
+            <span>Panel</span>
+        </a>
+    <a href="{% url 'perfil' %}" class="nav-item {% if active_nav == 'perfil' %}active{% endif %}">
+        <i class="bi bi-person-circle"></i>
+        <span>Perfil</span>
+    </a>
+    <a href="{% url 'admin_emergencia' %}"
+        class="nav-item emergencia {% if active_nav == 'emergencia' %}active{% endif %}">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>Emergencia</span>
+    </a>
+    <a href="{% url 'logout' %}" class="nav-item" onclick="return confirm('¿Está seguro de que desea salir?');">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Salir</span>
+    </a>
+    {% elif request.user.perfil.rol == 'guardia' %}
+    <a href="{% url 'guardia_home' %}"
+        class="nav-item nav-item-principal {% if active_nav == 'home' %}active{% endif %}">
+        <i class="bi bi-speedometer2"></i>
+        <span>Panel</span>
+    </a>
+    <a href="{% url 'lista_diaria' %}" class="nav-item {% if active_nav == 'lista' %}active{% endif %}">
+        <i class="bi bi-list-ul"></i>
+        <span>Lista</span>
+    </a>
+    <a href="{% url 'perfil' %}" class="nav-item {% if active_nav == 'perfil' %}active{% endif %}">
+        <i class="bi bi-person-circle"></i>
+        <span>Perfil</span>
+    </a>
+    <a href="{% url 'logout' %}" class="nav-item" onclick="return confirm('¿Está seguro de que desea salir?');">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Salir</span>
+    </a>
+    {% else %}
+    <a href="{% url 'trabajador_home' %}"
+        class="nav-item nav-item-principal {% if active_nav == 'home' %}active{% endif %}">
+        <i class="bi bi-house"></i>
+        <span>Inicio</span>
+    </a>
+    <a href="{% url 'perfil' %}" class="nav-item {% if active_nav == 'perfil' %}active{% endif %}">
+        <i class="bi bi-person-circle"></i>
+        <span>Perfil</span>
+    </a>
+    <a href="{% url 'logout' %}" class="nav-item" onclick="return confirm('¿Está seguro de que desea salir?');">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Salir</span>
+    </a>
+    {% endif %}
+</div>

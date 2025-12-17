@@ -45,10 +45,7 @@
 </div>
 {% endblock %}
 {% block footer %}
-<div class="footer">
-    <a href="{% url 'trabajador_home' %}" class="nav-item active"><i class="bi bi-house"></i><span>Inicio</span></a>
-    <a href="{% url 'perfil' %}" class="nav-item"><i class="bi bi-person-circle"></i><span>Perfil</span></a>
-</div>
+    {% include 'registroCajas/shared/footer.html' with active_nav='home' %}
 {% endblock %}
 {% block extra_js %}
 {% if beneficiario and not beneficiario.tiene_retiro %}

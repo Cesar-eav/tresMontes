@@ -8,19 +8,14 @@ from .models import Planta, Perfil
 # Create your views here.
 
 def login_view(request):
-    # Obtener todas las plantas para el selector
-    plantas = Planta.objects.filter(activa=True)
-
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        rol = request.POST.get('rol')
-        planta_codigo = request.POST.get('planta')
 
         # Validar campos obligatorios
-        if not all([username, password, rol, planta_codigo]):
-            messages.error(request, 'Todos los campos son obligatorios')
-            return render(request, 'registroCajas/login.html', {'plantas': plantas})
+        if not all([username, password]):
+            messages.error(request, 'Usuario y contraseña son obligatorios')
+            return render(request, 'registroCajas/login.html')
 
         # Autenticar usuario
         user = authenticate(request, username=username, password=password)
@@ -31,25 +26,20 @@ def login_view(request):
                 perfil = user.perfil
             except Perfil.DoesNotExist:
                 messages.error(request, 'Usuario sin perfil asignado. Contacte al administrador.')
-                return render(request, 'registroCajas/login.html', {'plantas': plantas})
+                return render(request, 'registroCajas/login.html')
 
-            # Verificar que el rol coincida
-            if perfil.rol != rol:
-                messages.error(request, 'El rol seleccionado no coincide con su usuario')
-                return render(request, 'registroCajas/login.html', {'plantas': plantas})
-
-            # Verificar que la planta coincida (opcional para admins)
-            if perfil.planta and perfil.planta.codigo != planta_codigo:
-                messages.error(request, 'La planta seleccionada no coincide con su asignación')
-                return render(request, 'registroCajas/login.html', {'plantas': plantas})
+            # Verificar que tenga planta asignada
+            if not perfil.planta:
+                messages.error(request, 'Usuario sin planta asignada. Contacte al administrador.')
+                return render(request, 'registroCajas/login.html')
 
             # Login exitoso
             login(request, user)
 
-            # Guardar planta en sesión
-            request.session['planta_codigo'] = planta_codigo
+            # Guardar planta en sesión (obtenida del perfil)
+            request.session['planta_codigo'] = perfil.planta.codigo
 
-            # Redirigir según el rol
+            # Redirigir según el rol (obtenido del perfil)
             if perfil.rol == 'admin':
                 return redirect('admin_home')
             elif perfil.rol == 'guardia':
@@ -60,7 +50,7 @@ def login_view(request):
             # Credenciales inválidas
             messages.error(request, 'Usuario o contraseña incorrectos')
 
-    return render(request, 'registroCajas/login.html', {'plantas': plantas})
+    return render(request, 'registroCajas/login.html')
 
 
 def logout_view(request):
@@ -77,15 +67,17 @@ from django.utils import timezone
 @admin_required
 def admin_home(request):
     """Panel principal del administrador"""
-    # Obtener campaña activa de la planta actual
+    # Obtener la planta del admin para mostrarla, pero no para filtrar los datos principales
     planta_codigo = request.session.get('planta_codigo')
     planta = get_object_or_404(Planta, codigo=planta_codigo)
 
     from .models import Campana, Retiro
-    campana_activa = Campana.objects.filter(planta=planta, activa=True).first()
+    # Para el admin, buscar CUALQUIER campaña activa, no solo la de su planta.
+    # La más reciente es la más relevante.
+    campana_activa = Campana.objects.filter(activa=True).order_by('-fecha_creacion').first()
 
     context = {
-        'planta': planta,
+        'planta': planta, # La planta del admin se sigue mostrando
         'campana_activa': campana_activa,
     }
 

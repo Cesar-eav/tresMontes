@@ -19,68 +19,107 @@
 
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
-
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-calendar-date me-2"></i> Detalles de la Carga
+        <div class="row">
+            <!-- Columna de Detalles -->
+            <div class="col-lg-7">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <i class="bi bi-calendar-date me-2"></i> 1. Detalles de la Carga
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="nombre">Nombre de la Carga</label>
+                                    <input type="text" id="nombre" name="nombre" class="form-control"
+                                           placeholder="Ej: Entrega Navidad 2025">
+                                    <small class="text-muted">Este es el nombre que se mostrará en los reportes.</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="planta" class="fw-bold">Planta *</label>
+                                    <select id="planta" name="planta" class="form-select" required>
+                                        <option value="">Seleccione una planta</option>
+                                        {% for p in plantas %}
+                                            <option value="{{ p.id }}">{{ p.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="fecha_inicio" class="fw-bold">Fecha Inicio *</label>
+                                    <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control"
+                                           value="{{ fecha_inicio_sugerida|date:'Y-m-d' }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="fecha_fin" class="fw-bold">Fecha Fin *</label>
+                                    <input type="date" id="fecha_fin" name="fecha_fin" class="form-control"
+                                           value="{{ fecha_fin_sugerida|date:'Y-m-d' }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="dias_bloqueados">Bloquear Días (opcional)</label>
+                            <input type="text" id="dias_bloqueados" name="dias_bloqueados_input" class="form-control"
+                                   placeholder="Selecciona días en los que NO se podrá retirar">
+                            <input type="hidden" id="dias_bloqueados_hidden" name="dias_bloqueados">
+                            <div id="dias-chips" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="form-group">
-                    <label for="nombre">Nombre de la Carga</label>
-                    <input type="text" id="nombre" name="nombre" class="form-control"
-                           placeholder="Ej: Entrega Navidad 2025" value="Entrega {{ fecha_inicio_sugerida|date:'F Y' }}">
-                </div>
 
-                <div class="form-group">
-                    <label for="fecha_inicio" class="fw-bold">Fecha Inicio *</label>
-                    <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control"
-                           value="{{ fecha_inicio_sugerida|date:'Y-m-d' }}" required>
-                </div>
+            <!-- Columna de Carga de Archivo -->
+            <div class="col-lg-5">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <i class="bi bi-file-earmark-excel me-2"></i> 2. Cargar Nómina
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <div class="form-group">
+                            <label for="archivo_nomina" class="fw-bold">Archivo de Nómina *</label>
+                            <input type="file" id="archivo_nomina" name="archivo_nomina" class="form-control"
+                                   accept=".xlsx,.xls,.csv" required>
 
-                <div class="form-group">
-                    <label for="fecha_fin" class="fw-bold">Fecha Fin *</label>
-                    <input type="date" id="fecha_fin" name="fecha_fin" class="form-control"
-                           value="{{ fecha_fin_sugerida|date:'Y-m-d' }}" required>
-                </div>
+                                                           <div class="d-grid gap-2 mt-auto">
+                            <button type="submit" class="btn btn-primary btn-md">
+                                <i class="bi bi-check-circle me-2"></i> Activar Carga
+                            </button>
+                        </div>
+                            <div class="alert alert-info mt-3">
+                                <strong>Instrucciones:</strong>
+                                <ul class="mb-0 small">
+                                    <li>Formatos: Excel (.xlsx, .xls) o CSV (.csv)</li>
+                                    <li>Delimitador: Tabulador (TAB) o Coma (,)</li>
+                                    <li>Tipos de contrato: "Indefinido" (Planta) o "Plazo Fijo" (Contratista)</li>
+                                    <li><strong>9 columnas requeridas:</strong>
+                                        <ol>
+                                            <li>RUT</li>
+                                            <li>EMPLEADO</li>
+                                            <li>NOMBRES</li>
+                                            <li>APELLIDOS</li>
+                                            <li>CARGO</li>
+                                            <li>TIPO DE CONTRATO</li>
+                                            <li>PERIODO</li>
+                                            <li>SEDE</li>
+                                            <li>ESTADO</li>
+                                        </ol>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
 
-                <div class="form-group">
-                    <label>Planta</label>
-                    <input type="text" class="form-control" value="{{ planta.nombre }}" disabled>
-                    <small class="text-muted">La planta se asigna automáticamente según tu sesión</small>
-                </div>
 
-                <div class="form-group">
-                    <label for="dias_bloqueados">Bloquear Días (opcional)</label>
-                    <input type="text" id="dias_bloqueados" name="dias_bloqueados_input" class="form-control"
-                           placeholder="Selecciona días a bloquear">
-                    <input type="hidden" id="dias_bloqueados_hidden" name="dias_bloqueados">
-                    <small class="text-muted">Días en los que NO se podrá retirar</small>
-                    <div id="dias-chips" class="mt-2"></div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-file-earmark-excel me-2"></i> Cargar Nómina de Beneficiarios
-            </div>
-            <div class="card-body">
-                <div class="form-group">
-                    <label for="archivo_nomina">Archivo de Nómina *</label>
-                    <input type="file" id="archivo_nomina" name="archivo_nomina" class="form-control"
-                           accept=".xlsx,.xls,.csv" required>
-                    <small class="text-muted d-block">Formatos: Excel (.xlsx, .xls) o CSV (.csv)</small>
-                    <small class="text-muted d-block"><strong>Columnas requeridas (9 columnas):</strong></small>
-                    <small class="text-muted d-block">RUT | EMPLEADO | NOMBRES | APELLIDOS | CARGO | TIPO DE CONTRATO | PERIODO | SEDE | ESTADO</small>
-                    <small class="text-muted d-block">Delimitador: Tabulador (TAB) o Coma (,)</small>
-                    <small class="text-muted d-block">Tipos de contrato: "Indefinido" = Planta, "Plazo Fijo" = Contratista</small>
-                </div>
-            </div>
-        </div>
-
-        <button type="submit" class="btn btn-primary w-100">
-            <i class="bi bi-check-circle me-2"></i> Crear y Activar Carga
-        </button>
     </form>
 </div>
 {% endblock %}
@@ -109,4 +148,8 @@ const fp = flatpickr("#dias_bloqueados", {
     }
 });
 </script>
+{% endblock %}
+
+{% block footer %}
+    {% include 'registroCajas/shared/footer.html' with active_nav='home' %}
 {% endblock %}

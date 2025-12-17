@@ -36,8 +36,8 @@ body {
 /* Main Content */
 .main-content {
     padding: 20px;
-    max-width: 600px;
-    margin: 0 auto;
+    max-width: 900px;
+    margin: 2rem auto;
 }
 
 /* Estadísticas */
@@ -75,12 +75,12 @@ body {
 
 .btn-action {
     width: 100%;
-    background-color: #2d5f3f;
+    background-color: #4CAF50; /* Brighter green */
     color: white;
     border: none;
-    padding: 15px;
+    padding: 20px; /* Increased padding */
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 18px; /* Increased font size */
     font-weight: bold;
     cursor: pointer;
     margin-bottom: 15px;
@@ -88,11 +88,14 @@ body {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    transition: background-color 0.3s;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Added shadow */
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
 }
 
 .btn-action:hover {
-    background-color: #234a32;
+    background-color: #45a049; /* Darker shade of the new green */
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3); /* Enhanced shadow on hover */
+    transform: scale(1.02); /* Slight scale effect on hover */
 }
 
 .btn-action i {

@@ -55,3 +55,7 @@ html5QrcodeScanner.render(onScanSuccess, onScanError);
 document.getElementById('qr-result').innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle"></i> Apunte la cámara al código QR<br><small>Ajuste la distancia y el ángulo si es necesario</small></div>';
 </script>
 {% endblock %}
+
+{% block footer %}
+    {% include 'registroCajas/shared/footer.html' with active_nav='home' %}
+{% endblock %}

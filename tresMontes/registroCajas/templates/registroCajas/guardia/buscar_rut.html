@@ -1,32 +1,163 @@
 {% extends '../base.html' %}
 {% block title %}Buscar por RUT{% endblock %}
+
+{% block extra_css %}
+<style>
+    .resultado-card {
+        border: 2px solid var(--success-color);
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .codigo-badge {
+        display: inline-block;
+        background-color: #f8f9fa;
+        border: 2px dashed var(--primary-color);
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        color: var(--primary-color);
+        font-size: 1.1rem;
+    }
+
+    .info-beneficiario {
+        background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+    }
+
+    .ya-entregado {
+        background: linear-gradient(135deg, #c8e6c9 0%, #dcedc8 100%);
+        border-left: 4px solid #4caf50;
+        padding: 15px;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="header">
     <a href="{% url 'guardia_home' %}" style="position: absolute; left: 15px; color: white;"><i class="bi bi-arrow-left"></i></a>
     <h2>Buscar Beneficiario</h2>
 </div>
 <div class="content">
-    {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }}">{{ message }}</div>{% endfor %}{% endif %}
-    <div class="card">
-        <div class="card-header"><i class="bi bi-search me-2"></i> Ingrese RUT</div>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Formulario de búsqueda -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-search me-2"></i> Buscar por RUT del Beneficiario
+        </div>
         <div class="card-body">
             <form method="GET">
-                <div class="form-group"><input type="text" id="rut_buscar" name="rut" class="form-control" placeholder="12.345.678-9" value="{{ rut_buscado }}" required autofocus></div>
-                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-2"></i> Buscar</button>
+                <div class="form-group mb-3">
+                    <label for="rut_buscar" class="form-label">RUT del trabajador</label>
+                    <input type="text"
+                           id="rut_buscar"
+                           name="rut"
+                           class="form-control form-control-lg"
+                           placeholder="12.345.678-9"
+                           value="{{ rut_buscado }}"
+                           required
+                           autofocus>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 btn-lg">
+                    <i class="bi bi-search me-2"></i> Buscar Beneficiario
+                </button>
             </form>
         </div>
     </div>
+
+    <!-- Resultado de búsqueda -->
     {% if beneficiario %}
-    <div class="card">
-        <div class="card-header"><i class="bi bi-person-check me-2"></i> Resultado</div>
+    <div class="card resultado-card">
+        <div class="card-header bg-success text-white">
+            <i class="bi bi-person-check-fill me-2"></i> Beneficiario Encontrado
+        </div>
         <div class="card-body">
-            <h5>{{ beneficiario.nombre }}</h5>
-            <p class="text-muted mb-2">{{ beneficiario.rut }}</p>
-            <div class="mb-2"><span class="badge bg-info">{{ beneficiario.get_tipo_contrato_display }}</span> <span class="badge bg-secondary">{{ beneficiario.get_tipo_caja_display }}</span></div>
+            <div class="info-beneficiario">
+                <h4 class="mb-2">{{ beneficiario.nombre }}</h4>
+                <p class="mb-2">
+                    <i class="bi bi-credit-card me-1"></i>
+                    <strong>RUT:</strong> {{ beneficiario.rut }}
+                </p>
+                <div class="mb-2">
+                    <span class="badge bg-info">{{ beneficiario.get_tipo_contrato_display }}</span>
+                    <span class="badge bg-secondary">{{ beneficiario.get_tipo_caja_display }}</span>
+                </div>
+                <p class="mb-2">
+                    <i class="bi bi-building me-1"></i>
+                    <strong>Planta:</strong> {{ beneficiario.planta.nombre }}
+                </p>
+                <p class="mb-0">
+                    <i class="bi bi-box-seam me-1"></i>
+                    <strong>Código de Caja:</strong>
+                    <span class="codigo-badge ms-2">{{ beneficiario.codigo_caja }}</span>
+                </p>
+            </div>
+
             {% if beneficiario.tiene_retiro %}
-            <div class="alert alert-success"><i class="bi bi-check-circle me-2"></i> Caja ya entregada el {{ beneficiario.retiro.fecha_hora|date:"d/m/Y H:i" }}</div>
+                <!-- Ya fue entregada -->
+                <div class="ya-entregado">
+                    <h5 class="text-success mb-3">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        Caja Ya Entregada
+                    </h5>
+                    <p class="mb-2">
+                        <strong>Fecha y hora:</strong> {{ beneficiario.retiro.fecha_hora|date:"d/m/Y H:i" }}
+                    </p>
+                    <p class="mb-2">
+                        <strong>Confirmado por:</strong> {{ beneficiario.retiro.confirmado_por.get_full_name }}
+                    </p>
+                    {% if beneficiario.retiro.retirado_por_tercero %}
+                        <div class="alert alert-warning mt-3 mb-2">
+                            <strong><i class="bi bi-person-fill me-1"></i>Retirado por tercero:</strong>
+                            <br>
+                            {{ beneficiario.retiro.nombre_tercero }} ({{ beneficiario.retiro.rut_tercero }})
+                        </div>
+                    {% endif %}
+                    {% if beneficiario.retiro.observaciones %}
+                        <p class="mb-0">
+                            <strong>Observaciones:</strong><br>
+                            <span class="text-muted">{{ beneficiario.retiro.observaciones }}</span>
+                        </p>
+                    {% endif %}
+                </div>
             {% else %}
-            <a href="{% url 'guardia_confirmar' beneficiario.id %}" class="btn btn-success w-100"><i class="bi bi-box-seam me-2"></i> Confirmar Entrega</a>
+                <!-- Puede retirar -->
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    Este beneficiario aún no ha retirado su caja.
+                </div>
+                <a href="{% url 'guardia_confirmar' beneficiario.id %}"
+                   class="btn btn-success w-100 btn-lg">
+                    <i class="bi bi-box-seam me-2"></i> Proceder a Entregar Caja
+                </a>
+                <div class="alert alert-warning mt-3 mb-0">
+                    <small>
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        Si el titular no puede retirar, podrá autorizar a un tercero en la siguiente pantalla.
+                    </small>
+                </div>
             {% endif %}
         </div>
     </div>
@@ -40,4 +171,8 @@
         vincularFormateadorRUT('rut_buscar');
     });
 </script>
+{% endblock %}
+
+{% block footer %}
+    {% include 'registroCajas/shared/footer.html' with active_nav='home' %}
 {% endblock %}

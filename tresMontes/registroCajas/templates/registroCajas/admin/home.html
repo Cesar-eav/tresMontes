@@ -28,7 +28,7 @@
         </div>
     {% else %}
         <!-- Estadísticas -->
-        <div class="stats-container">
+        <div class="stats-container mb-4">
             <div class="stat-card">
                 <div class="stat-number">{{ tasa_entrega }}%</div>
                 <div class="stat-label">Tasa de Entrega</div>
@@ -44,75 +44,79 @@
         </div>
 
         <!-- Acciones Rápidas -->
-        <div class="card">
+        <div class="card mb-4">
             <div class="card-header">
                 <i class="bi bi-plus-circle me-2"></i> Acciones Rápidas
             </div>
             <div class="card-body">
-                <a href="{% url 'admin_crear_campana' %}" class="btn btn-primary w-100 mb-2">
-                    <i class="bi bi-calendar-plus me-2"></i> Crear Nueva Entrega
-                </a>
-                <a href="{% url 'admin_gestionar_cargas' %}" class="btn btn-outline-primary w-100 mb-2">
-                    <i class="bi bi-folder me-2"></i> Gestionar Cargas
-                </a>
-                <a href="{% url 'guardia_scanner' %}" class="btn btn-primary w-100">
-                    <i class="bi bi-qr-code-scan me-2"></i> Escanear Código QR
-                </a>
+                <div class="d-grid gap-3 d-md-flex justify-content-center">
+                    <a href="{% url 'admin_crear_campana' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-calendar-plus me-2"></i> Crear Nueva Entrega
+                    </a>
+                    <a href="{% url 'admin_gestionar_cargas' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-folder me-2"></i> Gestionar Cargas
+                    </a>
+                </div>
             </div>
         </div>
 
-        <!-- Actividad Reciente -->
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-list-check me-2"></i> Actividad Reciente
-            </div>
-            <div class="card-body">
-                {% if entregas_recientes %}
-                    {% for retiro in entregas_recientes %}
-                        <div class="list-item">
-                            <div>
-                                <strong>{{ retiro.beneficiario.nombre }}</strong>
-                                <div class="text-muted small">
-                                    {{ retiro.fecha_hora|date:"H:i" }}
-                                    {% if retiro.retirado_por_tercero %}
-                                        - <i class="bi bi-person-check"></i> {{ retiro.nombre_tercero }}
-                                    {% endif %}
+        <div class="row">
+            <div class="col-lg-7 mb-4 mb-lg-0">
+                <!-- Actividad Reciente -->
+                <div class="card h-100">
+                    <div class="card-header">
+                        <i class="bi bi-list-check me-2"></i> Actividad Reciente
+                    </div>
+                    <div class="card-body">
+                        {% if entregas_recientes %}
+                            {% for retiro in entregas_recientes %}
+                                <div class="list-item">
+                                    <div>
+                                        <strong>{{ retiro.beneficiario.nombre }}</strong>
+                                        <div class="text-muted small">
+                                            {{ retiro.fecha_hora|date:"H:i" }}
+                                            {% if retiro.retirado_por_tercero %}
+                                                - <i class="bi bi-person-check"></i> {{ retiro.nombre_tercero }}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <span class="status-badge status-delivered">Entregado</span>
                                 </div>
-                            </div>
-                            <span class="status-badge status-delivered">Entregado</span>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted text-center mb-0">No hay entregas registradas hoy</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <!-- Info de la Carga Activa -->
+                <div class="card h-100">
+                    <div class="card-header">
+                        <i class="bi bi-calendar-event me-2"></i> Carga Activa
+                    </div>
+                    <div class="card-body">
+                        <div class="list-item">
+                            <span>Nombre:</span>
+                            <strong>{{ campana_activa.nombre }}</strong>
                         </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="text-muted text-center mb-0">No hay entregas registradas hoy</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Info de la Carga Activa -->
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-calendar-event me-2"></i> Carga Activa
-            </div>
-            <div class="card-body">
-                <div class="list-item">
-                    <span>Nombre:</span>
-                    <strong>{{ campana_activa.nombre }}</strong>
-                </div>
-                <div class="list-item">
-                    <span>Fecha Inicio:</span>
-                    <strong>{{ campana_activa.fecha_inicio|date:"d/m/Y" }}</strong>
-                </div>
-                <div class="list-item">
-                    <span>Fecha Fin:</span>
-                    <strong>{{ campana_activa.fecha_fin|date:"d/m/Y" }}</strong>
-                </div>
-                <div class="list-item">
-                    <span>Total Beneficiarios:</span>
-                    <strong>{{ total_beneficiarios }}</strong>
-                </div>
-                <div class="list-item">
-                    <span>Entregados:</span>
-                    <strong class="text-success">{{ total_entregados }}</strong>
+                        <div class="list-item">
+                            <span>Fecha Inicio:</span>
+                            <strong>{{ campana_activa.fecha_inicio|date:"d/m/Y" }}</strong>
+                        </div>
+                        <div class="list-item">
+                            <span>Fecha Fin:</span>
+                            <strong>{{ campana_activa.fecha_fin|date:"d/m/Y" }}</strong>
+                        </div>
+                        <div class="list-item">
+                            <span>Total Beneficiarios:</span>
+                            <strong>{{ total_beneficiarios }}</strong>
+                        </div>
+                        <div class="list-item">
+                            <span>Entregados:</span>
+                            <strong class="text-success">{{ total_entregados }}</strong>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -121,30 +125,5 @@
 {% endblock %}
 
 {% block footer %}
-<div class="footer">
-    <a href="{% url 'admin_home' %}" class="nav-item active">
-        <i class="bi bi-speedometer2"></i>
-        <span>Panel</span>
-    </a>
-    <a href="{% url 'lista_diaria' %}" class="nav-item">
-        <i class="bi bi-list-ul"></i>
-        <span>Lista Día</span>
-    </a>
-    <a href="{% url 'admin_reportes' %}" class="nav-item">
-        <i class="bi bi-graph-up"></i>
-        <span>Reportes</span>
-    </a>
-    <a href="{% url 'admin_usuarios' %}" class="nav-item">
-        <i class="bi bi-people-fill"></i>
-        <span>Usuarios</span>
-    </a>
-    <a href="{% url 'perfil' %}" class="nav-item">
-        <i class="bi bi-person-circle"></i>
-        <span>Perfil</span>
-    </a>
-    <a href="{% url 'admin_emergencia' %}" class="nav-item emergencia">
-        <i class="bi bi-exclamation-triangle-fill"></i>
-        <span>E</span>
-    </a>
-</div>
+    {% include 'registroCajas/shared/footer.html' with active_nav='home' %}
 {% endblock %}

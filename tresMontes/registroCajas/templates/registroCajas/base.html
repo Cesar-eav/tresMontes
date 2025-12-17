@@ -47,8 +47,10 @@
 
         /* Modo escritorio para Admin */
         .phone-container.desktop-mode {
-            max-width: 100%;
-            border-radius: 0;
+            max-width: 1200px; /* Aumentado para que sea más grande */
+            margin: 2rem auto; /* Centrado con margen */
+            border-radius: 10px; /* Bordes redondeados para un look más moderno */
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1); /* Sombra para destacar */
         }
 
         .header {
@@ -85,34 +87,51 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center; /* Center content vertically */
             cursor: pointer;
             color: #666;
-            transition: color 0.3s;
+            transition: all 0.3s; /* Animate all properties */
             text-decoration: none;
             user-select: none;
+            width: 50px; /* Smaller than principal */
+            height: 50px; /* Smaller than principal */
+            border-radius: 50%; /* Circular */
+            background-color: var(--secondary-color); /* Light background */
         }
 
-        .nav-item:hover { color: var(--primary-color); }
-        .nav-item.active { color: var(--primary-color); }
-        .nav-item i { font-size: 1.5rem; }
-        .nav-item span { font-size: 0.75rem; margin-top: 2px; }
+        .nav-item:hover {
+            background-color: #e0e0e0; /* Slightly darker on hover */
+            color: var(--primary-color);
+        }
+        .nav-item.active {
+            background-color: #d4edda; /* Light green for active */
+            color: #155724;
+        }
+        .nav-item i { font-size: 1.3rem; } /* Adjusted icon size */
+        .nav-item span { font-size: 0.65rem; margin-top: 2px; }
 
         /* Botón de emergencia */
         .nav-item.emergencia { color: var(--danger-color) !important; }
         .nav-item.emergencia.active { color: #a71d2a !important; }
 
         .btn-primary {
-            background-color: var(--primary-color);
+            background-color: var(--success-color); /* Un color más vibrante */
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 15px 30px; /* Más padding para un botón más grande */
+            border-radius: 8px;
             color: white;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            text-transform: uppercase; /* Para que el texto destaque */
         }
 
-        .btn-primary:hover { background-color: #164830; }
+        .btn-primary:hover { 
+            background-color: #218838; /* Un poco más oscuro al pasar el mouse */
+            transform: translateY(-2px); /* Efecto de "levantamiento" */
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
 
         .card {
             border-radius: 10px;
@@ -212,11 +231,34 @@
             border: 1px solid #bee5eb;
         }
 
+        
+        /* Estilo para el botón principal de navegación en el footer */
+        .nav-item-principal {
+            transform: scale(1.2) translateY(-10px); /* Lo hace más grande y lo "levanta" */
+            background-color: var(--primary-color);
+            color: white !important;
+            border-radius: 20%; /* Lo hace circular */
+            width: 100px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 -4px 8px rgba(0,0,0,0.15);
+            border: 3px solid white;
+        }
+        .nav-item-principal span {
+            font-size: 0.7rem;
+        }
+        .nav-item-principal.active {
+            background-color: var(--accent-color);
+            color: black !important;
+        }
+
         {% block extra_css %}{% endblock %}
     </style>
 </head>
 <body>
-    <div class="phone-container {% if request.user.perfil.rol == 'admin' %}desktop-mode{% endif %}">
+    <div class="phone-container {% if 'admin' in request.path %}desktop-mode{% elif request.user.is_authenticated and request.user.perfil.rol == 'admin' %}desktop-mode{% endif %}">
         {% block content %}{% endblock %}
 
         {% block footer %}{% endblock %}

@@ -15,10 +15,17 @@
                 <h5 class="mb-2">Código de Caja:</h5>
                 <h2 class="mb-0"><strong>{{ codigo_caja }}</strong></h2>
             </div>
-            <p class="text-muted">
-                Caja entregada a:<br>
-                <strong>{{ nombre_beneficiario }}</strong>
-            </p>
+            <div class="mt-3">
+                <p class="text-muted mb-1">Beneficiario:</p>
+                <p class="mb-0"><strong>{{ nombre_beneficiario }}</strong></p>
+            </div>
+            {% if retirado_por_tercero %}
+            <div class="alert alert-warning mt-3">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>Retirado por tercero:</strong><br>
+                {{ nombre_tercero }}
+            </div>
+            {% endif %}
             <div class="mt-4">
                 <a href="{% url 'guardia_scanner' %}" class="btn btn-primary me-2">
                     <i class="bi bi-qr-code-scan me-2"></i> Escanear Otra Caja
@@ -44,10 +51,17 @@
                     <h5 class="mb-2">Código de Caja:</h5>
                     <h2 class="mb-0"><strong>{{ codigo_caja }}</strong></h2>
                 </div>
-                <p class="text-muted">
-                    Caja entregada a:<br>
-                    <strong>{{ nombre_beneficiario }}</strong>
-                </p>
+                <div class="mt-3">
+                    <p class="text-muted mb-1">Beneficiario:</p>
+                    <p class="mb-0"><strong>{{ nombre_beneficiario }}</strong></p>
+                </div>
+                {% if retirado_por_tercero %}
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Retirado por tercero:</strong><br>
+                    {{ nombre_tercero }}
+                </div>
+                {% endif %}
             </div>
             <div class="modal-footer justify-content-center">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>

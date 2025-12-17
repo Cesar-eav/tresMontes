@@ -142,12 +142,18 @@
     <div class="card">
         <div class="card-header"><i class="bi bi-info-circle me-2"></i> Información de la Carga</div>
         <div class="card-body">
-            <div class="list-item"><span>Nombre:</span><strong>{{ campana.nombre }}</strong></div>
-            <div class="list-item"><span>Fecha Inicio:</span><strong>{{ campana.fecha_inicio|date:"d/m/Y" }}</strong></div>
-            <div class="list-item"><span>Fecha Fin:</span><strong>{{ campana.fecha_fin|date:"d/m/Y" }}</strong></div>
-            <div class="list-item"><span>Estado:</span><span class="badge {% if campana.activa %}bg-success{% else %}bg-secondary{% endif %}">{% if campana.activa %}Activa{% else %}Inactiva{% endif %}</span></div>
-            <div class="list-item"><span>Creada por:</span><strong>{{ campana.creado_por.perfil.nombre_completo }}</strong></div>
-            <div class="list-item"><span>Fecha Creación:</span><strong>{{ campana.fecha_creacion|date:"d/m/Y H:i" }}</strong></div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="list-item"><span>Nombre:</span><strong>{{ campana.nombre }}</strong></div>
+                    <div class="list-item"><span>Fecha Inicio:</span><strong>{{ campana.fecha_inicio|date:"d/m/Y" }}</strong></div>
+                    <div class="list-item"><span>Fecha Fin:</span><strong>{{ campana.fecha_fin|date:"d/m/Y" }}</strong></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="list-item"><span>Estado:</span><span class="badge {% if campana.activa %}bg-success{% else %}bg-secondary{% endif %}">{% if campana.activa %}Activa{% else %}Inactiva{% endif %}</span></div>
+                    <div class="list-item"><span>Creada por:</span><strong>{{ campana.creado_por.perfil.nombre_completo }}</strong></div>
+                    <div class="list-item"><span>Fecha Creación:</span><strong>{{ campana.fecha_creacion|date:"d/m/Y H:i" }}</strong></div>
+                </div>
+            </div>
         </div>
     </div>
     <div class="stats-container">
@@ -283,6 +289,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    vincularFormateadorRUT('busqueda');
     const busqueda = document.getElementById('busqueda');
     const filtroPlanta = document.getElementById('filtro-planta');
     const filtroContrato = document.getElementById('filtro-contrato');
@@ -404,4 +411,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+{% endblock %}
+
+{% block footer %}
+    {% include 'registroCajas/shared/footer.html' with active_nav='home' %}
 {% endblock %}

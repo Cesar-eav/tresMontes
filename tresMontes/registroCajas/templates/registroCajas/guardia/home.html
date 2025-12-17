@@ -1,37 +1,158 @@
 {% extends '../base.html' %}
 {% block title %}Panel Guardia{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Botón QR protagonista */
+    .btn-qr-hero {
+        background: linear-gradient(135deg, var(--success-color) 0%, #1e7e34 100%);
+        border: none;
+        padding: 30px 20px;
+        border-radius: 15px;
+        color: white;
+        font-weight: bold;
+        font-size: 1.3rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .btn-qr-hero:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(40, 167, 69, 0.6);
+        background: linear-gradient(135deg, #1e7e34 0%, var(--success-color) 100%);
+    }
+
+    .btn-qr-hero i {
+        font-size: 3rem;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+    }
+
+    .btn-buscar-rut {
+        background-color: #6c757d;
+        border: none;
+        padding: 15px 20px;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-buscar-rut:hover {
+        background-color: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .divider-text {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 25px 0;
+    }
+
+    .divider-text::before,
+    .divider-text::after {
+        content: '';
+        flex: 1;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .divider-text span {
+        padding: 0 15px;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="header"><h2>Panel de Guardia</h2></div>
 <div class="content">
     {% if campana_activa %}
-    <div class="card">
-        <div class="card-header"><i class="bi bi-calendar-check me-2"></i> Carga Activa</div>
-        <div class="card-body">
-            <h5>{{ campana_activa.nombre }}</h5>
-            <p class="text-muted small mb-2">{{ campana_activa.fecha_inicio|date:"d/m/Y" }} - {{ campana_activa.fecha_fin|date:"d/m/Y" }}</p>
-            <div class="stats-container">
-                <div class="stat-card"><div class="stat-number">{{ total_entregados }}</div><div class="stat-label">Entregados</div></div>
-                <div class="stat-card"><div class="stat-number">{{ total_pendientes }}</div><div class="stat-label">Pendientes</div></div>
+        <!-- Acción Principal: Escanear QR -->
+        <div class="card mb-4" style="border: 3px solid var(--success-color); background: linear-gradient(to bottom, #ffffff 0%, #f8fff9 100%);">
+            <div class="card-body text-center p-4">
+                <div class="mb-3">
+                    <i class="bi bi-award-fill" style="font-size: 2rem; color: var(--success-color);"></i>
+                </div>
+                <h4 class="mb-3" style="color: var(--success-color);">Entrega de Cajas</h4>
+                <a href="{% url 'guardia_scanner' %}" class="btn btn-qr-hero w-100 mb-3">
+                    <i class="bi bi-qr-code-scan"></i>
+                    <span>Escanear QR</span>
+                </a>
+                <p class="text-muted small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Forma rápida y segura de registrar entregas
+                </p>
             </div>
         </div>
-    </div>
-    <div class="card">
-        <div class="card-header"><i class="bi bi-search me-2"></i> Buscar Beneficiario</div>
-        <div class="card-body">
-            <form method="GET" action="{% url 'guardia_buscar_rut' %}">
-                <div class="form-group"><input type="text" id="rut_home_guardia" name="rut" class="form-control" placeholder="Ingrese RUT (ej: 12.345.678-9)" required></div>
-                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-2"></i> Buscar</button>
-            </form>
+
+        <!-- Búsqueda Manual -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="divider-text">
+                    <span>Búsqueda Manual</span>
+                </div>
+                <form method="GET" action="{% url 'guardia_buscar_rut' %}">
+                    <div class="mb-3">
+                        <label for="rut_home_guardia" class="form-label">
+                            <i class="bi bi-search me-1"></i>Buscar por RUT
+                        </label>
+                        <input type="text"
+                               id="rut_home_guardia"
+                               name="rut"
+                               class="form-control form-control-lg"
+                               placeholder="Ej: 12.345.678-9"
+                               required>
+                    </div>
+                    <button type="submit" class="btn btn-buscar-rut w-100">
+                        <i class="bi bi-search"></i>
+                        <span>Buscar Beneficiario</span>
+                    </button>
+                </form>
+                <div class="alert alert-info mt-3 mb-0">
+                    <small>
+                        <i class="bi bi-lightbulb-fill me-1"></i>
+                        <strong>Importante:</strong> Si el beneficiario no puede retirar, puede autorizar a un tercero durante el proceso de entrega.
+                    </small>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="card">
-        <div class="card-header"><i class="bi bi-qr-code-scan me-2"></i> Escanear QR</div>
-        <div class="card-body">
-            <a href="{% url 'guardia_scanner' %}" class="btn btn-success w-100"><i class="bi bi-camera me-2"></i> Abrir Escáner</a>
+
+        <!-- Estadísticas -->
+        <div class="card mb-4">
+            <div class="card-header"><i class="bi bi-graph-up me-2"></i> Estadísticas de la Carga: {{ campana_activa.nombre }}</div>
+            <div class="card-body">
+                <div class="stats-container">
+                    <div class="stat-card"><div class="stat-number">{{ total_entregados }}</div><div class="stat-label">Entregados</div></div>
+                    <div class="stat-card"><div class="stat-number">{{ total_pendientes }}</div><div class="stat-label">Pendientes</div></div>
+                </div>
+            </div>
         </div>
-    </div>
+
+
     {% else %}
-    <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i> No hay carga activa en este momento.</div>
+        <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i> No hay carga activa en este momento.</div>
     {% endif %}
 </div>
 {% endblock %}
@@ -45,9 +166,5 @@
 {% endblock %}
 
 {% block footer %}
-<div class="footer">
-    <a href="{% url 'guardia_home' %}" class="nav-item active"><i class="bi bi-speedometer2"></i><span>Panel</span></a>
-    <a href="{% url 'lista_diaria' %}" class="nav-item"><i class="bi bi-list-ul"></i><span>Lista</span></a>
-    <a href="{% url 'perfil' %}" class="nav-item"><i class="bi bi-person-circle"></i><span>Perfil</span></a>
-</div>
+    {% include 'registroCajas/shared/footer.html' with active_nav='home' %}
 {% endblock %}

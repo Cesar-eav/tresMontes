@@ -1,34 +1,232 @@
 {% extends '../base.html' %}
 {% block title %}Confirmar Entrega{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-box {
+        background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+        border-left: 4px solid var(--primary-color);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .codigo-caja-display {
+        background-color: #f8f9fa;
+        border: 2px dashed var(--primary-color);
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+        margin: 15px 0;
+    }
+
+    .codigo-caja-display h3 {
+        color: var(--primary-color);
+        margin: 0;
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+    }
+
+    .form-switch-custom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .form-switch-custom:hover {
+        background-color: #e9ecef;
+    }
+
+    .form-switch-custom input[type="checkbox"] {
+        width: 50px;
+        height: 25px;
+        cursor: pointer;
+    }
+
+    .tercero-section {
+        border: 2px solid #ffc107;
+        border-radius: 10px;
+        padding: 20px;
+        background-color: #fffef7;
+        margin-bottom: 20px;
+    }
+
+    .tercero-section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        color: #856404;
+    }
+
+    .tercero-section-header i {
+        font-size: 1.5rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="header">
     <a href="{% url 'guardia_buscar_rut' %}" style="position: absolute; left: 15px; color: white;"><i class="bi bi-arrow-left"></i></a>
     <h2>Confirmar Entrega</h2>
 </div>
 <div class="content">
-    {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }}">{{ message }}</div>{% endfor %}{% endif %}
-    <div class="card">
-        <div class="card-header"><i class="bi bi-person me-2"></i> Datos del Beneficiario</div>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Información del Beneficiario -->
+    <div class="card mb-3">
+        <div class="card-header"><i class="bi bi-person-fill me-2"></i> Beneficiario</div>
         <div class="card-body">
-            <h5>{{ beneficiario.nombre }}</h5>
-            <p class="text-muted mb-2">{{ beneficiario.rut }}</p>
-            <div class="mb-3"><span class="badge bg-info">{{ beneficiario.get_tipo_contrato_display }}</span> <span class="badge bg-secondary">{{ beneficiario.get_tipo_caja_display }}</span></div>
-            <p><strong>Carga:</strong> {{ beneficiario.campana.nombre }}</p>
+            <h5 class="mb-2">{{ beneficiario.nombre }}</h5>
+            <p class="text-muted mb-3"><i class="bi bi-credit-card me-1"></i>{{ beneficiario.rut }}</p>
+            <div class="mb-3">
+                <span class="badge bg-info">{{ beneficiario.get_tipo_contrato_display }}</span>
+                <span class="badge bg-secondary">{{ beneficiario.get_tipo_caja_display }}</span>
+            </div>
+            <p class="mb-0"><strong>Campaña:</strong> {{ beneficiario.campana.nombre }}</p>
         </div>
     </div>
-    <form method="POST">{% csrf_token %}
-        <div class="card">
-            <div class="card-header"><i class="bi bi-clipboard-check me-2"></i> Confirmación</div>
-            <div class="card-body">
-                <div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="retira_titular" name="retira_titular" checked onchange="document.getElementById('autorizacion-form').style.display = this.checked ? 'none' : 'block'"><label class="form-check-label" for="retira_titular">Retira el titular</label></div>
-                <div id="autorizacion-form" style="display: none;">
-                    <div class="form-group"><label>Nombre de quien retira</label><input type="text" name="nombre_tercero" class="form-control"></div>
-                    <div class="form-group"><label>RUT de quien retira</label><input type="text" name="rut_tercero" class="form-control" placeholder="12345678-9"></div>
+
+    <!-- Código de Caja -->
+    <div class="codigo-caja-display">
+        <p class="text-muted small mb-2">Código de Caja</p>
+        <h3>{{ beneficiario.codigo_caja }}</h3>
+    </div>
+
+    <form method="POST" id="form-entrega">
+        {% csrf_token %}
+
+        <!-- Selector: Titular o Tercero -->
+        <div class="info-box">
+            <i class="bi bi-question-circle-fill me-2"></i>
+            <strong>¿Quién retira la caja?</strong>
+        </div>
+
+        <div class="form-switch-custom" onclick="toggleTitular()">
+            <div>
+                <strong>Retira el Titular</strong>
+                <div class="text-muted small">{{ beneficiario.nombre }}</div>
+            </div>
+            <input class="form-check-input"
+                   type="checkbox"
+                   id="retira_titular"
+                   name="retira_titular"
+                   checked
+                   onclick="event.stopPropagation();">
+        </div>
+
+        <!-- Sección de Tercero -->
+        <div id="tercero-section" style="display: none;">
+            <div class="tercero-section">
+                <div class="tercero-section-header">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <strong>Datos de quien retira</strong>
                 </div>
-                <div class="form-group"><label>Observaciones (opcional)</label><textarea name="observaciones" class="form-control" rows="3"></textarea></div>
+                <div class="alert alert-warning mb-3">
+                    <small>
+                        <i class="bi bi-info-circle me-1"></i>
+                        El beneficiario <strong>{{ beneficiario.nombre }}</strong> autoriza a un tercero a retirar su caja.
+                    </small>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label"><i class="bi bi-person me-1"></i>Nombre Completo *</label>
+                    <input type="text"
+                           name="nombre_tercero"
+                           id="nombre_tercero"
+                           class="form-control form-control-lg"
+                           placeholder="Nombre de quien retira la caja">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="bi bi-credit-card me-1"></i>RUT *</label>
+                    <input type="text"
+                           id="rut_tercero"
+                           name="rut_tercero"
+                           class="form-control form-control-lg"
+                           placeholder="12.345.678-9">
+                </div>
             </div>
         </div>
-        <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle me-2"></i> Confirmar Entrega</button>
+
+        <!-- Observaciones -->
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-chat-left-text me-2"></i> Observaciones</div>
+            <div class="card-body">
+                <textarea name="observaciones"
+                          class="form-control"
+                          rows="3"
+                          placeholder="Ingrese cualquier observación relevante (opcional)"></textarea>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success w-100 btn-lg">
+            <i class="bi bi-check-circle-fill me-2"></i> Confirmar Entrega
+        </button>
     </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleTitular() {
+        const checkbox = document.getElementById('retira_titular');
+        checkbox.checked = !checkbox.checked;
+        updateTerceroSection();
+    }
+
+    function updateTerceroSection() {
+        const checkbox = document.getElementById('retira_titular');
+        const terceroSection = document.getElementById('tercero-section');
+        const nombreInput = document.getElementById('nombre_tercero');
+        const rutInput = document.getElementById('rut_tercero');
+
+        if (checkbox.checked) {
+            terceroSection.style.display = 'none';
+            // Limpiar campos cuando se oculta
+            if (nombreInput) nombreInput.value = '';
+            if (rutInput) rutInput.value = '';
+        } else {
+            terceroSection.style.display = 'block';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Vincular formateador de RUT
+        vincularFormateadorRUT('rut_tercero');
+
+        // Escuchar cambios en el checkbox
+        const checkbox = document.getElementById('retira_titular');
+        checkbox.addEventListener('change', updateTerceroSection);
+
+        // Validación del formulario
+        const form = document.getElementById('form-entrega');
+        form.addEventListener('submit', function(e) {
+            const retiraTitular = document.getElementById('retira_titular').checked;
+
+            if (!retiraTitular) {
+                const nombreTercero = document.getElementById('nombre_tercero').value.trim();
+                const rutTercero = document.getElementById('rut_tercero').value.trim();
+
+                if (!nombreTercero || !rutTercero) {
+                    e.preventDefault();
+                    alert('Por favor, complete el nombre y RUT de quien retira la caja.');
+                    return false;
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+{% block footer %}
+    {% include 'registroCajas/shared/footer.html' with active_nav='home' %}
 {% endblock %}
