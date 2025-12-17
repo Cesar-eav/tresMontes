@@ -143,6 +143,7 @@ class Beneficiario(models.Model):
     tipo_contrato = models.CharField(max_length=20, choices=TIPO_CONTRATO_CHOICES)
     tipo_caja = models.CharField(max_length=20, choices=TIPO_CAJA_CHOICES, default='estandar')
     planta = models.ForeignKey(Planta, on_delete=models.CASCADE)
+    codigo_caja = models.CharField(max_length=15, unique=True, blank=True)
 
     class Meta:
         verbose_name = 'Beneficiario'
@@ -161,6 +162,53 @@ class Beneficiario(models.Model):
         from django.utils import timezone
         hoy = timezone.now().date()
         return not self.campana.dias_bloqueados.filter(fecha=hoy).exists()
+
+    def generar_codigo_caja(self):
+        """Genera un código único para la caja basado en campaña, tipo de contrato, planta y correlativo"""
+        import re
+
+        # Prefijo según tipo de contrato
+        prefijo = 'I' if self.tipo_contrato == 'indefinido' else 'F'
+
+        # Usar fecha de inicio de campaña
+        fecha_inicio = self.campana.fecha_inicio
+        dia = fecha_inicio.strftime('%d')
+        mes = fecha_inicio.strftime('%m')
+
+        # Código corto de la planta
+        planta_codigo = self.planta.get_codigo_corto()
+
+        # Obtener el último número correlativo de la campaña para esta planta
+        beneficiarios_planta = Beneficiario.objects.filter(
+            campana=self.campana,
+            planta=self.planta
+        ).exclude(codigo_caja='').order_by('id')
+
+        # Encontrar el máximo correlativo
+        max_correlativo = 0
+        patron = rf'^[IF]-{dia}{mes}{planta_codigo}(\d+)$'
+
+        for beneficiario in beneficiarios_planta:
+            match = re.match(patron, beneficiario.codigo_caja)
+            if match:
+                correlativo = int(match.group(1))
+                if correlativo > max_correlativo:
+                    max_correlativo = correlativo
+
+        # Nuevo correlativo
+        nuevo_correlativo = max_correlativo + 1
+        correlativo_str = str(nuevo_correlativo).zfill(2)
+
+        # Generar código
+        codigo = f"{prefijo}-{dia}{mes}{planta_codigo}{correlativo_str}"
+
+        return codigo
+
+    def save(self, *args, **kwargs):
+        """Generar código automáticamente al guardar"""
+        if not self.codigo_caja:
+            self.codigo_caja = self.generar_codigo_caja()
+        super().save(*args, **kwargs)
 
 
 class Retiro(models.Model):
@@ -182,58 +230,10 @@ class Retiro(models.Model):
     def __str__(self):
         return f"{self.beneficiario.nombre} - {self.fecha_hora.strftime('%d/%m/%Y %H:%M')}"
 
-    def generar_codigo_caja(self):
-        """Genera un código único para la caja basado en el tipo de contrato, fecha, planta y correlativo"""
-        from django.utils import timezone
-        from django.db.models import Max
-        import re
-
-        # Prefijo según tipo de contrato
-        prefijo = 'I' if self.beneficiario.tipo_contrato == 'indefinido' else 'F'
-
-        # Fecha actual
-        ahora = timezone.now()
-        dia = ahora.strftime('%d')
-        mes = ahora.strftime('%m')
-
-        # Código corto de la planta
-        planta_codigo = self.beneficiario.planta.get_codigo_corto()
-
-        # Obtener el último número correlativo del día para esta planta
-        fecha_inicio = ahora.replace(hour=0, minute=0, second=0, microsecond=0)
-        fecha_fin = ahora.replace(hour=23, minute=59, second=59, microsecond=999999)
-
-        # Buscar retiros del día en la misma planta
-        retiros_del_dia = Retiro.objects.filter(
-            fecha_hora__gte=fecha_inicio,
-            fecha_hora__lte=fecha_fin,
-            beneficiario__planta=self.beneficiario.planta
-        ).exclude(codigo_caja='')
-
-        # Encontrar el máximo correlativo del día
-        max_correlativo = 0
-        patron = rf'^[IF]-{dia}{mes}{planta_codigo}(\d+)$'
-
-        for retiro in retiros_del_dia:
-            match = re.match(patron, retiro.codigo_caja)
-            if match:
-                correlativo = int(match.group(1))
-                if correlativo > max_correlativo:
-                    max_correlativo = correlativo
-
-        # Nuevo correlativo
-        nuevo_correlativo = max_correlativo + 1
-        correlativo_str = str(nuevo_correlativo).zfill(2)  # Rellenar con ceros a la izquierda
-
-        # Generar código
-        codigo = f"{prefijo}-{dia}{mes}{planta_codigo}{correlativo_str}"
-
-        return codigo
-
     def save(self, *args, **kwargs):
-        """Generar código automáticamente al guardar"""
-        if not self.codigo_caja:
-            self.codigo_caja = self.generar_codigo_caja()
+        """Copiar código del beneficiario al guardar"""
+        if not self.codigo_caja and self.beneficiario.codigo_caja:
+            self.codigo_caja = self.beneficiario.codigo_caja
         super().save(*args, **kwargs)
 
 

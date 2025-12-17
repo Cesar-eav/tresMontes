@@ -36,9 +36,10 @@ class DiaBloqueadoAdmin(admin.ModelAdmin):
 
 @admin.register(Beneficiario)
 class BeneficiarioAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'rut', 'campana', 'planta', 'tipo_contrato', 'tipo_caja', 'tiene_retiro']
+    list_display = ['nombre', 'rut', 'codigo_caja', 'campana', 'planta', 'tipo_contrato', 'tipo_caja', 'tiene_retiro']
     list_filter = ['campana', 'planta', 'tipo_contrato', 'tipo_caja']
-    search_fields = ['nombre', 'rut']
+    search_fields = ['nombre', 'rut', 'codigo_caja']
+    readonly_fields = ['codigo_caja']
 
 
 @admin.register(Retiro)

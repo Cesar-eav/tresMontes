@@ -254,6 +254,9 @@
                                     <i class="bi bi-credit-card me-1"></i>{{ benef.rut }} |
                                     <i class="bi bi-building ms-2 me-1"></i>{{ planta_nombre }} |
                                     <i class="bi bi-file-text ms-2 me-1"></i>{{ benef.get_tipo_contrato_display }}
+                                    {% if benef.codigo_caja %}
+                                    <br><span class="badge bg-secondary mt-1"><i class="bi bi-box-seam me-1"></i>{{ benef.codigo_caja }}</span>
+                                    {% endif %}
                                 </div>
                             </div>
                             {% if benef.tiene_retiro %}
