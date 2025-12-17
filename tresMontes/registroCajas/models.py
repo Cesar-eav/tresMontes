@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
+import random
+import string
 
 
 # Validador de RUT chileno
@@ -28,6 +30,15 @@ class Planta(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    def get_codigo_corto(self):
+        """Retorna el código corto de la planta para el código de caja"""
+        codigos = {
+            'casablanca': 'CB',
+            'valparaiso_bif': 'BIF',
+            'valparaiso_bic': 'BIC',
+        }
+        return codigos.get(self.codigo, 'XXX')
 
 
 class Perfil(models.Model):
@@ -161,6 +172,7 @@ class Retiro(models.Model):
     retirado_por_tercero = models.BooleanField(default=False)
     nombre_tercero = models.CharField(max_length=200, blank=True)
     rut_tercero = models.CharField(max_length=12, blank=True)
+    codigo_caja = models.CharField(max_length=15, unique=True, blank=True)
 
     class Meta:
         verbose_name = 'Retiro'
@@ -169,6 +181,60 @@ class Retiro(models.Model):
 
     def __str__(self):
         return f"{self.beneficiario.nombre} - {self.fecha_hora.strftime('%d/%m/%Y %H:%M')}"
+
+    def generar_codigo_caja(self):
+        """Genera un código único para la caja basado en el tipo de contrato, fecha, planta y correlativo"""
+        from django.utils import timezone
+        from django.db.models import Max
+        import re
+
+        # Prefijo según tipo de contrato
+        prefijo = 'I' if self.beneficiario.tipo_contrato == 'indefinido' else 'F'
+
+        # Fecha actual
+        ahora = timezone.now()
+        dia = ahora.strftime('%d')
+        mes = ahora.strftime('%m')
+
+        # Código corto de la planta
+        planta_codigo = self.beneficiario.planta.get_codigo_corto()
+
+        # Obtener el último número correlativo del día para esta planta
+        fecha_inicio = ahora.replace(hour=0, minute=0, second=0, microsecond=0)
+        fecha_fin = ahora.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+        # Buscar retiros del día en la misma planta
+        retiros_del_dia = Retiro.objects.filter(
+            fecha_hora__gte=fecha_inicio,
+            fecha_hora__lte=fecha_fin,
+            beneficiario__planta=self.beneficiario.planta
+        ).exclude(codigo_caja='')
+
+        # Encontrar el máximo correlativo del día
+        max_correlativo = 0
+        patron = rf'^[IF]-{dia}{mes}{planta_codigo}(\d+)$'
+
+        for retiro in retiros_del_dia:
+            match = re.match(patron, retiro.codigo_caja)
+            if match:
+                correlativo = int(match.group(1))
+                if correlativo > max_correlativo:
+                    max_correlativo = correlativo
+
+        # Nuevo correlativo
+        nuevo_correlativo = max_correlativo + 1
+        correlativo_str = str(nuevo_correlativo).zfill(2)  # Rellenar con ceros a la izquierda
+
+        # Generar código
+        codigo = f"{prefijo}-{dia}{mes}{planta_codigo}{correlativo_str}"
+
+        return codigo
+
+    def save(self, *args, **kwargs):
+        """Generar código automáticamente al guardar"""
+        if not self.codigo_caja:
+            self.codigo_caja = self.generar_codigo_caja()
+        super().save(*args, **kwargs)
 
 
 class AutorizacionTercero(models.Model):

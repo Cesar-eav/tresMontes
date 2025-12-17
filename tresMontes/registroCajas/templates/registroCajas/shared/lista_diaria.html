@@ -23,7 +23,15 @@
         <div class="card-body">
             {% for item in beneficiarios %}
             <div class="list-item">
-                <div><strong>{{ item.beneficiario.nombre }}</strong><div class="text-muted small">{{ item.beneficiario.rut }} | {{ item.beneficiario.get_tipo_contrato_display }} | {{ item.beneficiario.get_tipo_caja_display }}</div></div>
+                <div>
+                    <strong>{{ item.beneficiario.nombre }}</strong>
+                    <div class="text-muted small">
+                        {{ item.beneficiario.rut }} | {{ item.beneficiario.get_tipo_contrato_display }} | {{ item.beneficiario.get_tipo_caja_display }}
+                        {% if item.tiene_retiro %}
+                        <br><span class="badge bg-info">Código: {{ item.beneficiario.retiro.codigo_caja }}</span>
+                        {% endif %}
+                    </div>
+                </div>
                 {% if item.tiene_retiro %}
                 <span class="status-badge status-delivered"><i class="bi bi-check-circle me-1"></i> Entregado</span>
                 {% else %}

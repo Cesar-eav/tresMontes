@@ -10,7 +10,19 @@
       "Bash(python -c:*)",
       "Bash(python manage.py shell:*)",
       "Bash(git config:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nMejoras en el sistema de escaneo QR\n\n- Mejorado scanner QR con mejor detección\n- Agregado enfoque automático continuo\n- Agregado control de exposición automática\n- Agregado balance de blancos automático\n- Aumentado tamaño del QR box para mejor detección\n- Agregadas instrucciones visuales en el scanner\n- Agregado feedback visual al detectar QR\n- Script de búsqueda de RUT en base de datos\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git checkout:*)",
+      "Bash(git commit:*)",
+      "Bash(python manage.py makemigrations:*)",
+      "Bash(pip install:*)",
+      "Bash(python manage.py migrate:*)",
+      "Bash(python manage.py check:*)",
+      "Bash(python manage.py:*)"
     ]
   }
 }

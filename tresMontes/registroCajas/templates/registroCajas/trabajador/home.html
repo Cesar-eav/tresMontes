@@ -19,7 +19,12 @@
             <p class="text-muted small">Período: {{ beneficiario.campana.fecha_inicio|date:"d/m/Y" }} - {{ beneficiario.campana.fecha_fin|date:"d/m/Y" }}</p>
             <div class="mb-3"><span class="badge bg-info">{{ beneficiario.get_tipo_contrato_display }}</span> <span class="badge bg-secondary">{{ beneficiario.get_tipo_caja_display }}</span></div>
             {% if beneficiario.tiene_retiro %}
-            <div class="alert alert-success"><i class="bi bi-check-circle-fill me-2"></i><strong>¡Caja Entregada!</strong><br><small>Retirada el {{ beneficiario.retiro.fecha_hora|date:"d/m/Y H:i" }}</small></div>
+            <div class="alert alert-success">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <strong>¡Caja Entregada!</strong><br>
+                <small>Retirada el {{ beneficiario.retiro.fecha_hora|date:"d/m/Y H:i" }}</small><br>
+                <span class="badge bg-light text-dark mt-2">Código: {{ beneficiario.retiro.codigo_caja }}</span>
+            </div>
             {% else %}
             <div class="alert alert-warning"><i class="bi bi-hourglass-split me-2"></i><strong>Pendiente de Retiro</strong><br><small>Puede retirar su caja en portería</small></div>
             {% endif %}

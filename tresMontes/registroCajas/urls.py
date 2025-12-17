@@ -26,6 +26,7 @@ urlpatterns = [
     path('guardia/scanner/', views_guardia.guardia_scanner, name='guardia_scanner'),
     path('guardia/buscar-rut/', views_guardia.guardia_buscar_rut, name='guardia_buscar_rut'),
     path('guardia/confirmar/<int:beneficiario_id>/', views_guardia.guardia_confirmar, name='guardia_confirmar'),
+    path('guardia/confirmar-exitoso/', views_guardia.guardia_confirmar_exitoso, name='guardia_confirmar_exitoso'),
 
     # Trabajador
     path('trabajador/home/', views_trabajador.trabajador_home, name='trabajador_home'),

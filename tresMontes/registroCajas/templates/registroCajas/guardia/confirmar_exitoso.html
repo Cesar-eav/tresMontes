@@ -1,0 +1,92 @@
+{% extends '../base.html' %}
+{% block title %}Entrega Confirmada{% endblock %}
+{% block content %}
+<div class="header">
+    <h2>Entrega Confirmada</h2>
+</div>
+<div class="content">
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <div class="mb-4">
+                <i class="bi bi-check-circle-fill text-success" style="font-size: 80px;"></i>
+            </div>
+            <h3 class="text-success mb-3">¡Caja Entregada!</h3>
+            <div class="alert alert-info">
+                <h5 class="mb-2">Código de Caja:</h5>
+                <h2 class="mb-0"><strong>{{ codigo_caja }}</strong></h2>
+            </div>
+            <p class="text-muted">
+                Caja entregada a:<br>
+                <strong>{{ nombre_beneficiario }}</strong>
+            </p>
+            <div class="mt-4">
+                <a href="{% url 'guardia_scanner' %}" class="btn btn-primary me-2">
+                    <i class="bi bi-qr-code-scan me-2"></i> Escanear Otra Caja
+                </a>
+                <a href="{% url 'guardia_home' %}" class="btn btn-secondary">
+                    <i class="bi bi-house me-2"></i> Ir al Inicio
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación con animación -->
+<div class="modal fade" id="modalExito" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 80px; animation: scaleIn 0.5s ease-in-out;"></i>
+                </div>
+                <h3 class="text-success mb-3">¡Caja Entregada!</h3>
+                <div class="alert alert-info">
+                    <h5 class="mb-2">Código de Caja:</h5>
+                    <h2 class="mb-0"><strong>{{ codigo_caja }}</strong></h2>
+                </div>
+                <p class="text-muted">
+                    Caja entregada a:<br>
+                    <strong>{{ nombre_beneficiario }}</strong>
+                </p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes scaleIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Mostrar el modal automáticamente cuando la página carga
+document.addEventListener('DOMContentLoaded', function() {
+    var modalExito = new bootstrap.Modal(document.getElementById('modalExito'));
+    modalExito.show();
+
+    // Reproducir un sonido de éxito si el navegador lo permite
+    try {
+        var audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBi6Azt/JcSQFKnjL8N+TQAURX7vq56lXFgxEneHwvnEhBTGA0N/LdCYEKHjN8OCVRQYRY7vs5qhYFAw/muHwwHMjBSt+zd/PeiYEKHjN8OCVRQYRY7vs5qhYFAw/muHwwHMjBSt+zd/PeiYEKHjN8OCVRQYRY7vs5qhYFAw/muHwwHMjBSt+zd/PeiYEKHjN8OCVRQYRY7vs5qhYFAw/muHwwHMjBSt+zd/PeiYEKHjN8OCVRQYRY7vs5qhYFAw/muHwwHMjBSt+zd/PeiYEKHjN8OCVRQYRY7vs5qhYFAw/muHwwHMjBSt+zd/PeiYEKHjN8OCVRQYRY7vs5qhYFAw/muHwwHMjBSt+zd/PeiYEKHjN8OCVRQYRY7vs5qhYFAw/muHwwHMjBSt+zd/PeiYEKHjN8OCVRQYRY7vs5qhYFA==');
+        audio.play();
+    } catch(e) {
+        console.log('No se pudo reproducir el sonido');
+    }
+});
+</script>
+{% endblock %}

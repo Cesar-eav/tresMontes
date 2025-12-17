@@ -43,10 +43,11 @@ class BeneficiarioAdmin(admin.ModelAdmin):
 
 @admin.register(Retiro)
 class RetiroAdmin(admin.ModelAdmin):
-    list_display = ['beneficiario', 'fecha_hora', 'confirmado_por', 'retirado_por_tercero']
+    list_display = ['beneficiario', 'codigo_caja', 'fecha_hora', 'confirmado_por', 'retirado_por_tercero']
     list_filter = ['fecha_hora', 'retirado_por_tercero']
-    search_fields = ['beneficiario__nombre', 'beneficiario__rut']
+    search_fields = ['beneficiario__nombre', 'beneficiario__rut', 'codigo_caja']
     date_hierarchy = 'fecha_hora'
+    readonly_fields = ['codigo_caja']
 
 
 @admin.register(AutorizacionTercero)

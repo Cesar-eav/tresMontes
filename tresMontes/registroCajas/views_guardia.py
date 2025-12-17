@@ -110,22 +110,22 @@ def guardia_confirmar(request, beneficiario_id):
             observaciones=observaciones
         )
 
-        # Si no retira el titular, crear autorización
+        # Si no retira el titular, actualizar campos en el retiro
         if not retira_titular:
             nombre_tercero = request.POST.get('nombre_tercero', '')
             rut_tercero = request.POST.get('rut_tercero', '')
 
             if nombre_tercero and rut_tercero:
-                AutorizacionTercero.objects.create(
-                    retiro=retiro,
-                    nombre_tercero=nombre_tercero,
-                    rut_tercero=rut_tercero,
-                    autorizacion_verbal=True,
-                    autorizado_por=request.user
-                )
+                retiro.retirado_por_tercero = True
+                retiro.nombre_tercero = nombre_tercero
+                retiro.rut_tercero = rut_tercero
+                retiro.save()
 
-        messages.success(request, f'Entrega confirmada para {beneficiario.nombre}')
-        return redirect('guardia_home')
+        # Guardar el código de caja en la sesión para mostrarlo en el template
+        request.session['codigo_caja_entregada'] = retiro.codigo_caja
+        request.session['nombre_beneficiario'] = beneficiario.nombre
+
+        return redirect('guardia_confirmar_exitoso')
 
     context = {
         'planta': planta,
@@ -133,3 +133,25 @@ def guardia_confirmar(request, beneficiario_id):
     }
 
     return render(request, 'registroCajas/guardia/confirmar.html', context)
+
+
+@admin_or_guardia_required
+def guardia_confirmar_exitoso(request):
+    """Vista de confirmación exitosa con código de caja"""
+    planta_codigo = request.session.get('planta_codigo')
+    planta = get_object_or_404(Planta, codigo=planta_codigo)
+
+    # Obtener datos de la sesión
+    codigo_caja = request.session.pop('codigo_caja_entregada', None)
+    nombre_beneficiario = request.session.pop('nombre_beneficiario', None)
+
+    if not codigo_caja:
+        return redirect('guardia_home')
+
+    context = {
+        'planta': planta,
+        'codigo_caja': codigo_caja,
+        'nombre_beneficiario': nombre_beneficiario,
+    }
+
+    return render(request, 'registroCajas/guardia/confirmar_exitoso.html', context)
