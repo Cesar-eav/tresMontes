@@ -73,7 +73,7 @@ def crear_usuarios():
             'last_name': 'Fernández',
             'perfil': {
                 'rol': 'guardia',
-                'planta': plantas[0],
+                'planta': plantas[1],
                 'rut': '31.333.333-3',
                 'nombre_completo': 'Luis Fernández'
             }

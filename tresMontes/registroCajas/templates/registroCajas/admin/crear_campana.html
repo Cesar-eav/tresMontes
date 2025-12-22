@@ -51,14 +51,14 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="fecha_inicio" class="fw-bold">Fecha Inicio *</label>
+                                    <label for="fecha_inicio" class="fw-bold">Fecha Inicio Vigencia*</label>
                                     <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control"
                                            value="{{ fecha_inicio_sugerida|date:'Y-m-d' }}" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="fecha_fin" class="fw-bold">Fecha Fin *</label>
+                                    <label for="fecha_fin" class="fw-bold">Fecha Fin Vigencia*</label>
                                     <input type="date" id="fecha_fin" name="fecha_fin" class="form-control"
                                            value="{{ fecha_fin_sugerida|date:'Y-m-d' }}" required>
                                 </div>
@@ -93,25 +93,24 @@
                             </button>
                         </div>
                             <div class="alert alert-info mt-3">
-                                <strong>Instrucciones:</strong>
-                                <ul class="mb-0 small">
-                                    <li>Formatos: Excel (.xlsx, .xls) o CSV (.csv)</li>
-                                    <li>Delimitador: Tabulador (TAB) o Coma (,)</li>
-                                    <li>Tipos de contrato: "Indefinido" (Planta) o "Plazo Fijo" (Contratista)</li>
-                                    <li><strong>9 columnas requeridas:</strong>
-                                        <ol>
-                                            <li>RUT</li>
-                                            <li>EMPLEADO</li>
-                                            <li>NOMBRES</li>
-                                            <li>APELLIDOS</li>
-                                            <li>CARGO</li>
-                                            <li>TIPO DE CONTRATO</li>
-                                            <li>PERIODO</li>
-                                            <li>SEDE</li>
-                                            <li>ESTADO</li>
-                                        </ol>
-                                    </li>
+                                <strong>📋 Instrucciones de Carga:</strong>
+                                <ul class="mb-2 small">
+                                    <li>Formatos aceptados: Excel (.xlsx, .xls) o CSV (.csv)</li>
+                                    <li>Delimitador CSV: Tabulador (TAB) o Coma (,)</li>
+                                    <li>Primera fila debe contener los encabezados</li>
                                 </ul>
+
+                                <strong>✅ Formato Simplificado - 5 columnas (Recomendado):</strong>
+                                <ol class="small mb-2">
+                                    <li><strong>RUT</strong> - Formato: 12.345.678-9</li>
+                                    <li><strong>NOMBRE</strong> - Nombre completo</li>
+                                    <li><strong>TIPO_CONTRATO</strong> - Indefinido o Plazo Fijo</li>
+                                    <li><strong>TIPO_CAJA</strong> - estandar, especial o premium</li>
+                                    <li><strong>PLANTA_ID</strong> - 1 (Casa Blanca), 2 (BIF), 3 (BIC)</li>
+                                </ol>
+
+                                <strong>📄 Formato Extendido - 9 columnas (Legacy):</strong>
+                                <p class="small mb-0">RUT, EMPLEADO, NOMBRES, APELLIDOS, CARGO, TIPO DE CONTRATO, PERIODO, SEDE, ESTADO</p>
                             </div>
                         </div>
 

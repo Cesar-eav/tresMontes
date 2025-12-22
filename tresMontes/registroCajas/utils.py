@@ -185,9 +185,9 @@ def _procesar_csv_nomina(archivo, campana, planta):
 
             # Mapear tipos de contrato
             if 'fijo' in tipo_contrato_raw or 'plazo' in tipo_contrato_raw:
-                tipo_contrato = 'contratista'
+                tipo_contrato = 'fijo'
             else:
-                tipo_contrato = 'planta'
+                tipo_contrato = 'indefinido'
 
             print(f"DEBUG: Tipo contrato final: {tipo_contrato}")
 
@@ -425,9 +425,9 @@ def _procesar_excel_nomina(archivo, campana, planta):
 
             # Mapear tipos de contrato
             if 'fijo' in tipo_contrato_raw or 'plazo' in tipo_contrato_raw:
-                tipo_contrato = 'contratista'
+                tipo_contrato = 'fijo'
             else:
-                tipo_contrato = 'planta'
+                tipo_contrato = 'indefinido'
 
             # Tipo de caja por defecto
             tipo_caja = 'estandar'
