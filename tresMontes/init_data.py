@@ -47,7 +47,7 @@ def crear_usuarios():
             'perfil': {
                 'rol': 'admin',
                 'planta': plantas[0],
-                'rut': '11.111.111-1',
+                'rut': '12.111.111-1',
                 'nombre_completo': 'Ana Administradora'
             }
         },
@@ -60,8 +60,8 @@ def crear_usuarios():
             'last_name': 'Silva',
             'perfil': {
                 'rol': 'guardia',
-                'planta': plantas[1],
-                'rut': '22.222.222-2',
+                'planta': plantas[0],
+                'rut': '21.222.222-2',
                 'nombre_completo': 'Carlos Silva'
             }
         },
@@ -74,7 +74,7 @@ def crear_usuarios():
             'perfil': {
                 'rol': 'guardia',
                 'planta': plantas[0],
-                'rut': '33.333.333-3',
+                'rut': '31.333.333-3',
                 'nombre_completo': 'Luis Fernández'
             }
         },
@@ -88,7 +88,7 @@ def crear_usuarios():
             'perfil': {
                 'rol': 'trabajador',
                 'planta': plantas[1],
-                'rut': '44.444.444-4',
+                'rut': '41.444.444-4',
                 'nombre_completo': 'Juan Pérez'
             }
         },
@@ -101,7 +101,7 @@ def crear_usuarios():
             'perfil': {
                 'rol': 'trabajador',
                 'planta': plantas[0],
-                'rut': '55.555.555-5',
+                'rut': '51.555.555-5',
                 'nombre_completo': 'María González'
             }
         },
