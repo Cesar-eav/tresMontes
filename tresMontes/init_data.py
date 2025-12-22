@@ -87,8 +87,8 @@ def crear_usuarios():
             'last_name': 'Pérez',
             'perfil': {
                 'rol': 'trabajador',
-                'planta': plantas[1],
-                'rut': '41.444.444-4',
+                'planta': plantas[0],
+                'rut': '44.444.444-4',
                 'nombre_completo': 'Juan Pérez'
             }
         },
@@ -100,7 +100,7 @@ def crear_usuarios():
             'last_name': 'González',
             'perfil': {
                 'rol': 'trabajador',
-                'planta': plantas[0],
+                'planta': plantas[1],
                 'rut': '51.555.555-5',
                 'nombre_completo': 'María González'
             }

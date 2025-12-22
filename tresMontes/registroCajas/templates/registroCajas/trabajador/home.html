@@ -49,7 +49,8 @@
 {% endblock %}
 {% block extra_js %}
 {% if beneficiario and not beneficiario.tiene_retiro %}
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+{% load static %}
+<script src="{% static 'js/qrcode.min.js' %}"></script>
 <script>
 new QRCode(document.getElementById("qrcode"), {
     text: "{{ beneficiario.rut }}",
