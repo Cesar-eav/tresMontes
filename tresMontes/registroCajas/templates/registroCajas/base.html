@@ -274,8 +274,11 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
-    <!-- Utilidades RUT -->
-    <script src="{% static 'js/utils.js' %}"></script>
+    <!-- Utilidades RUT - Formateo para filtros -->
+    <script src="{% static 'js/rut-formateo.js' %}"></script>
+
+    <!-- Utilidades RUT - Validación para usuarios -->
+    <script src="{% static 'js/rut-validacion.js' %}"></script>
 
     {% block extra_js %}{% endblock %}
 </body>

@@ -558,7 +558,7 @@ def validar_rut_chileno(rut):
     
     # Comparar
     if digito_proporcionado != digito_calculado:
-        return False, f"RUT inválido: dígito verificador incorrecto (esperado {digito_calculado}, recibido {digito_proporcionado})"
+        return False, f"RUT Inválido )"
     
     return True, "RUT válido"
 
