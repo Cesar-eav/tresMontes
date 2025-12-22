@@ -35,9 +35,8 @@ def procesar_excel_nomina(archivo, campana, planta):
 
 def _procesar_csv_nomina(archivo, campana, planta):
     """
-    Procesa un archivo CSV. Detecta automáticamente el formato:
-    Formato 1: id,nombre,rut,tipo_contrato,tipo_caja,campana_id,planta_id
-    Formato 2: RUT,EMPLEADO,NOMBRES,APELLIDOS,CARGO,TIPO DE CONTRATO,PERIODO,SEDE,ESTADO
+    Procesa un archivo CSV con el formato:
+    RUT | EMPLEADO | NOMBRES | APELLIDOS | CARGO | TIPO DE CONTRATO | PERIODO | SEDE | ESTADO
     """
     beneficiarios_creados = 0
     filas_procesadas = 0
@@ -47,6 +46,10 @@ def _procesar_csv_nomina(archivo, campana, planta):
         # Leer el archivo CSV
         archivo_texto = archivo.read().decode('utf-8-sig')  # utf-8-sig maneja BOM
         print(f"DEBUG: Archivo leído, {len(archivo_texto)} caracteres")
+
+        # Validar que el archivo no esté vacío
+        if not archivo_texto or archivo_texto.strip() == '':
+            raise Exception("El archivo está vacío. Por favor suba un archivo con datos.")
 
         # Detectar delimitador (tabulador o coma)
         if '\t' in archivo_texto:
@@ -61,109 +64,96 @@ def _procesar_csv_nomina(archivo, campana, planta):
         print(f"DEBUG: Encabezado CSV: {header}")
         print(f"DEBUG: Número de columnas en encabezado: {len(header) if header else 0}")
 
+        # Validar que exista encabezado
         if not header:
-            raise Exception("El archivo CSV está vacío o no tiene encabezado")
+            raise Exception("El archivo no tiene encabezado. Asegúrese de que la primera fila contenga los nombres de las columnas.")
 
-        # Crear diccionario de índices de columnas
-        header_lower = [h.strip().lower() if h else '' for h in header]
-        indices = {}
+        # Validar número de columnas (debe tener al menos 9)
+        if len(header) < 9:
+            raise Exception(f"El archivo tiene {len(header)} columnas pero se requieren al menos 9 columnas: RUT, EMPLEADO, NOMBRES, APELLIDOS, CARGO, TIPO DE CONTRATO, PERIODO, SEDE, ESTADO")
 
-        # Detectar formato del CSV basándose en el encabezado
-        for i, col in enumerate(header_lower):
-            if col == 'id':
-                indices['id'] = i
-            elif col in ['nombre', 'nombres']:
-                indices['nombre'] = i
-            elif col == 'rut':
-                indices['rut'] = i
-            elif col in ['tipo_contrato', 'tipo de contrato', 'contrato']:
-                indices['tipo_contrato'] = i
-            elif col in ['tipo_caja', 'tipo de caja', 'caja']:
-                indices['tipo_caja'] = i
-            elif col in ['planta_id', 'planta', 'sede', 'site']:
-                indices['planta_id'] = i
-            elif col in ['empleado']:
-                indices['empleado'] = i
-            elif col in ['apellidos', 'apellido']:
-                indices['apellidos'] = i
-            elif col in ['cargo']:
-                indices['cargo'] = i
-            elif col in ['estado']:
-                indices['estado'] = i
-
-        print(f"DEBUG: Índices detectados: {indices}")
-
-        # Determinar formato
-        formato_simple = 'nombre' in indices and 'rut' in indices
-        print(f"DEBUG: Formato simple detectado: {formato_simple}")
+        # Detectar índice de columna que represente planta/sede/planta_id (si existe)
+        planta_idx = None
+        if header:
+            header_lower = [h.strip().lower() if h else '' for h in header]
+            for i, h in enumerate(header_lower):
+                if any(k in h for k in ['planta', 'planta_id', 'sede', 'site', 'sucursal', 'centro']):
+                    planta_idx = i
+                    break
+        print(f"DEBUG: Índice de columna planta detectado: {planta_idx}")
 
         for idx, row in enumerate(lector_csv, start=2):
             filas_procesadas += 1
             print(f"DEBUG: Fila {idx}: {row}")
             print(f"DEBUG: Longitud de fila: {len(row)}")
 
-            # Extraer datos según el formato detectado
+            # Saltar filas completamente vacías
+            if not row or all(not str(cell).strip() for cell in row):
+                print(f"DEBUG: Fila {idx} está vacía, saltando...")
+                continue
+
+            # Validar que tenga al menos 4 columnas (RUT, EMPLEADO, NOMBRES, APELLIDOS)
+            if len(row) < 4:
+                error = f"Fila {idx}: Tiene {len(row)} columnas pero se requieren al menos 4 (RUT, EMPLEADO, NOMBRES, APELLIDOS)"
+                print(f"DEBUG ERROR: {error}")
+                errores.append(error)
+                continue
+
+            # Extraer columnas según formato:
+            # 0: RUT
+            # 1: EMPLEADO
+            # 2: NOMBRES
+            # 3: APELLIDOS
+            # 4: CARGO
+            # 5: TIPO DE CONTRATO
+            # 6: PERIODO
+            # 7: SEDE
+            # 8: ESTADO
+
+            rut = str(row[0]).strip() if row[0] else ''
+            empleado = str(row[1]).strip() if len(row) > 1 and row[1] else ''
+            nombres = str(row[2]).strip() if len(row) > 2 and row[2] else ''
+            apellidos = str(row[3]).strip() if len(row) > 3 and row[3] else ''
+
+            if not rut:
+                error = f"Fila {idx}: RUT vacío"
+                print(f"DEBUG ERROR: {error}")
+                errores.append(error)
+                continue
+
+            # Construir nombre completo combinando EMPLEADO, NOMBRES y APELLIDOS
+            partes_nombre = [p for p in [empleado, nombres, apellidos] if p]
+            nombre_completo = ' '.join(partes_nombre).strip()
+
+            print(f"DEBUG: RUT={rut}, EMPLEADO={empleado}, NOMBRES={nombres}, APELLIDOS={apellidos}")
+            print(f"DEBUG: Nombre completo construido: '{nombre_completo}'")
+
+            if not nombre_completo:
+                error = f"Fila {idx}: Nombre completo vacío (EMPLEADO, NOMBRES y APELLIDOS están vacíos)"
+                print(f"DEBUG ERROR: {error}")
+                errores.append(error)
+                continue
+
+            # Tipo de contrato (columna 5, índice 5)
+            tipo_contrato_raw = str(row[5]).strip().lower() if len(row) > 5 and row[5] else 'indefinido'
+            print(f"DEBUG: Tipo contrato raw: '{tipo_contrato_raw}'")
+
+            # Mapear tipos de contrato
+            if 'fijo' in tipo_contrato_raw or 'plazo' in tipo_contrato_raw:
+                tipo_contrato = 'contratista'
+            else:
+                tipo_contrato = 'planta'
+
+            print(f"DEBUG: Tipo contrato final: {tipo_contrato}")
+
+            # Tipo de caja por defecto
+            tipo_caja = 'estandar'
+
+            # Determinar planta por fila (si existe columna), sino usar la planta por defecto
+            planta_por_fila = planta
             try:
-                # Extraer RUT
-                if 'rut' in indices:
-                    rut = str(row[indices['rut']]).strip() if len(row) > indices['rut'] else ''
-                else:
-                    rut = str(row[0]).strip() if len(row) > 0 else ''
-
-                if not rut:
-                    error = f"Fila {idx}: RUT vacío"
-                    print(f"DEBUG ERROR: {error}")
-                    errores.append(error)
-                    continue
-
-                # Extraer nombre
-                if 'nombre' in indices:
-                    # Formato simple: nombre completo en una columna
-                    nombre_completo = str(row[indices['nombre']]).strip()
-                else:
-                    # Formato extendido: construir desde empleado, nombres, apellidos
-                    empleado = str(row[indices['empleado']]).strip() if 'empleado' in indices and len(row) > indices['empleado'] else ''
-                    nombres = str(row[indices.get('nombre', 1)]).strip() if len(row) > indices.get('nombre', 1) else ''
-                    apellidos = str(row[indices['apellidos']]).strip() if 'apellidos' in indices and len(row) > indices['apellidos'] else ''
-                    partes_nombre = [p for p in [empleado, nombres, apellidos] if p]
-                    nombre_completo = ' '.join(partes_nombre).strip()
-
-                if not nombre_completo:
-                    error = f"Fila {idx}: Nombre vacío"
-                    print(f"DEBUG ERROR: {error}")
-                    errores.append(error)
-                    continue
-
-                print(f"DEBUG: RUT={rut}, Nombre={nombre_completo}")
-
-                # Extraer tipo de contrato
-                if 'tipo_contrato' in indices:
-                    tipo_contrato_raw = str(row[indices['tipo_contrato']]).strip().lower()
-                else:
-                    tipo_contrato_raw = 'indefinido'
-
-                # Mapear tipos de contrato
-                if tipo_contrato_raw in ['fijo', 'plazo fijo', 'contratista']:
-                    tipo_contrato = 'fijo'
-                else:
-                    tipo_contrato = 'indefinido'
-
-                print(f"DEBUG: Tipo contrato: {tipo_contrato}")
-
-                # Extraer tipo de caja
-                if 'tipo_caja' in indices:
-                    tipo_caja = str(row[indices['tipo_caja']]).strip().lower()
-                    if tipo_caja not in ['estandar', 'especial', 'premium', 'alternativa']:
-                        tipo_caja = 'estandar'
-                else:
-                    tipo_caja = 'estandar'
-
-                print(f"DEBUG: Tipo caja: {tipo_caja}")
-
-                # Determinar planta por fila (si existe columna), sino usar la planta por defecto
-                planta_por_fila = planta
-                if 'planta_id' in indices and len(row) > indices['planta_id']:
-                    raw_planta_val = str(row[indices['planta_id']]).strip()
+                if planta_idx is not None and len(row) > planta_idx:
+                    raw_planta_val = str(row[planta_idx]).strip()
                     print(f"DEBUG: Valor planta/sede del CSV: '{raw_planta_val}'")
                     if raw_planta_val:
                         # Intentar por ID numérico
@@ -214,11 +204,13 @@ def _procesar_csv_nomina(archivo, campana, planta):
                                         print(f"DEBUG: Planta encontrada por nombre: {planta_por_fila.nombre}")
                                     except Planta.DoesNotExist:
                                         print(f"DEBUG: No se pudo mapear '{raw_planta_val}' - usando planta por defecto")
+            except Exception as ex:
+                print(f"DEBUG: Error al determinar planta: {ex}")
+                planta_por_fila = planta
 
-                print(f"DEBUG: Planta final: {planta_por_fila.nombre} (ID: {planta_por_fila.id})")
-
-                # Crear beneficiario
-                print(f"DEBUG: Creando beneficiario '{nombre_completo}' ({rut}) en planta '{planta_por_fila}'...")
+            # Crear beneficiario
+            print(f"DEBUG: Creando beneficiario '{nombre_completo}' ({rut}) en planta '{planta_por_fila}'...")
+            try:
                 beneficiario, created = Beneficiario.objects.get_or_create(
                     campana=campana,
                     rut=rut,
@@ -235,9 +227,8 @@ def _procesar_csv_nomina(archivo, campana, planta):
                     print(f"DEBUG: ✓ Beneficiario creado exitosamente")
                 else:
                     print(f"DEBUG: ⚠ Beneficiario ya existía")
-
             except Exception as e:
-                error = f"Fila {idx}: Error al procesar - {str(e)}"
+                error = f"Fila {idx}: Error al crear beneficiario - {str(e)}"
                 print(f"DEBUG ERROR: {error}")
                 errores.append(error)
 
@@ -253,6 +244,18 @@ def _procesar_csv_nomina(archivo, campana, planta):
             for error in errores:
                 print(f"  - {error}")
 
+        # Validar que se haya creado al menos un beneficiario
+        if beneficiarios_creados == 0:
+            if errores:
+                # Si hay errores, mostrar un resumen
+                errores_muestra = errores[:5]  # Mostrar solo los primeros 5 errores
+                mensaje_errores = "\n".join(f"• {e}" for e in errores_muestra)
+                if len(errores) > 5:
+                    mensaje_errores += f"\n... y {len(errores) - 5} errores más"
+                raise Exception(f"No se pudo crear ningún beneficiario. Se encontraron {len(errores)} errores:\n{mensaje_errores}")
+            else:
+                raise Exception("No se encontraron datos válidos en el archivo. Asegúrese de que el archivo contenga al menos una fila con datos después del encabezado.")
+
     except Exception as e:
         print(f"DEBUG: !!!!! EXCEPCIÓN CAPTURADA !!!!!")
         print(f"DEBUG: {str(e)}")
@@ -266,12 +269,33 @@ def _procesar_csv_nomina(archivo, campana, planta):
 
 def _procesar_excel_nomina(archivo, campana, planta):
     """Procesa un archivo Excel"""
-    wb = openpyxl.load_workbook(archivo)
+    try:
+        wb = openpyxl.load_workbook(archivo)
+    except Exception as e:
+        raise Exception(f"Error al leer el archivo Excel. Asegúrese de que sea un archivo Excel válido (.xlsx o .xls): {str(e)}")
+
     ws = wb.active
 
+    if ws is None:
+        raise Exception("El archivo Excel no tiene hojas de cálculo.")
+
     beneficiarios_creados = 0
+    errores = []
+    filas_procesadas = 0
+
     # Leer encabezado (fila 1) para intentar detectar columna de planta
-    header_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=True))
+    header_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=True), None)
+
+    # Validar que exista encabezado
+    if not header_row:
+        raise Exception("El archivo Excel está vacío. No se encontró encabezado.")
+
+    # Validar número de columnas (debe tener al menos 9)
+    # Filtrar None values del encabezado para contar solo columnas con valor
+    header_validas = [h for h in header_row if h is not None and str(h).strip()]
+    if len(header_validas) < 9:
+        raise Exception(f"El archivo tiene {len(header_validas)} columnas pero se requieren al menos 9 columnas: RUT, EMPLEADO, NOMBRES, APELLIDOS, CARGO, TIPO DE CONTRATO, PERIODO, SEDE, ESTADO")
+
     header_lower = [str(h).strip().lower() if h else '' for h in header_row]
     planta_idx = None
     for i, h in enumerate(header_lower):
@@ -281,26 +305,76 @@ def _procesar_excel_nomina(archivo, campana, planta):
     print(f"DEBUG: Excel - índice de columna planta detectado: {planta_idx}")
 
     # Iterar desde la fila 2 (fila 1 es encabezado)
-    for row in ws.iter_rows(min_row=2, values_only=True):
-        if not row[0] or not row[1]:
+    for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+        filas_procesadas += 1
+        print(f"DEBUG Excel: Fila {idx}: {row}")
+
+        # Saltar filas completamente vacías
+        if not row or all(cell is None or str(cell).strip() == '' for cell in row):
+            print(f"DEBUG Excel: Fila {idx} está vacía, saltando...")
             continue
 
-        nombre = str(row[0]).strip()
-        rut = str(row[1]).strip()
-        tipo_contrato = str(row[2]).strip().lower() if row[2] else 'planta'
-        tipo_caja = str(row[3]).strip().lower() if len(row) > 3 and row[3] else 'estandar'
+        # Validar que tenga al menos los campos mínimos requeridos
+        if len(row) < 4:
+            error = f"Fila {idx}: Tiene {len(row)} columnas pero se requieren al menos 4 (RUT, EMPLEADO, NOMBRES, APELLIDOS)"
+            print(f"DEBUG Excel ERROR: {error}")
+            errores.append(error)
+            continue
 
-        # Validar tipo de contrato
-        if tipo_contrato not in ['planta', 'contratista']:
-            tipo_contrato = 'planta'
+        # Validar que los campos requeridos no estén vacíos
+        if not row[0] or str(row[0]).strip() == '':
+            error = f"Fila {idx}: Campo RUT (columna 1) está vacío"
+            print(f"DEBUG Excel ERROR: {error}")
+            errores.append(error)
+            continue
 
-        # Validar tipo de caja
-        if tipo_caja not in ['estandar', 'especial', 'premium']:
+        try:
+            # Formato Excel: RUT | EMPLEADO | NOMBRES | APELLIDOS | CARGO | TIPO DE CONTRATO | PERIODO | SEDE | ESTADO
+            # 0: RUT
+            # 1: EMPLEADO
+            # 2: NOMBRES
+            # 3: APELLIDOS
+            # 4: CARGO
+            # 5: TIPO DE CONTRATO
+            # 6: PERIODO
+            # 7: SEDE
+            # 8: ESTADO
+
+            rut = str(row[0]).strip() if row[0] else ''
+            empleado = str(row[1]).strip() if len(row) > 1 and row[1] else ''
+            nombres = str(row[2]).strip() if len(row) > 2 and row[2] else ''
+            apellidos = str(row[3]).strip() if len(row) > 3 and row[3] else ''
+
+            if not rut:
+                error = f"Fila {idx}: Campo RUT está vacío"
+                print(f"DEBUG Excel ERROR: {error}")
+                errores.append(error)
+                continue
+
+            # Construir nombre completo combinando EMPLEADO, NOMBRES y APELLIDOS
+            partes_nombre = [p for p in [empleado, nombres, apellidos] if p]
+            nombre = ' '.join(partes_nombre).strip()
+
+            if not nombre:
+                error = f"Fila {idx}: Nombre completo vacío (EMPLEADO, NOMBRES y APELLIDOS están vacíos)"
+                print(f"DEBUG Excel ERROR: {error}")
+                errores.append(error)
+                continue
+
+            # Tipo de contrato (columna 5)
+            tipo_contrato_raw = str(row[5]).strip().lower() if len(row) > 5 and row[5] else 'indefinido'
+
+            # Mapear tipos de contrato
+            if 'fijo' in tipo_contrato_raw or 'plazo' in tipo_contrato_raw:
+                tipo_contrato = 'contratista'
+            else:
+                tipo_contrato = 'planta'
+
+            # Tipo de caja por defecto
             tipo_caja = 'estandar'
 
-        # Determinar planta por fila (si existe columna), sino usar la planta por defecto
-        planta_por_fila = planta
-        try:
+            # Determinar planta por fila (si existe columna), sino usar la planta por defecto
+            planta_por_fila = planta
             if planta_idx is not None and len(row) > planta_idx:
                 raw_planta_val = str(row[planta_idx]).strip() if row[planta_idx] is not None else ''
                 if raw_planta_val:
@@ -314,23 +388,52 @@ def _procesar_excel_nomina(archivo, campana, planta):
                                 planta_por_fila = Planta.objects.get(nombre__iexact=raw_planta_val)
                             except Exception:
                                 planta_por_fila = planta
-        except Exception:
-            planta_por_fila = planta
 
-        # Crear beneficiario
-        beneficiario, created = Beneficiario.objects.get_or_create(
-            campana=campana,
-            rut=rut,
-            defaults={
-                'nombre': nombre,
-                'tipo_contrato': tipo_contrato,
-                'tipo_caja': tipo_caja,
-                'planta': planta_por_fila
-            }
-        )
+            # Crear beneficiario
+            beneficiario, created = Beneficiario.objects.get_or_create(
+                campana=campana,
+                rut=rut,
+                defaults={
+                    'nombre': nombre,
+                    'tipo_contrato': tipo_contrato,
+                    'tipo_caja': tipo_caja,
+                    'planta': planta_por_fila
+                }
+            )
 
-        if created:
-            beneficiarios_creados += 1
+            if created:
+                beneficiarios_creados += 1
+                print(f"DEBUG Excel: ✓ Beneficiario creado exitosamente")
+            else:
+                print(f"DEBUG Excel: ⚠ Beneficiario ya existía")
+        except Exception as e:
+            error = f"Fila {idx}: Error al crear beneficiario - {str(e)}"
+            print(f"DEBUG Excel ERROR: {error}")
+            errores.append(error)
+
+    print(f"DEBUG Excel: ==========================================")
+    print(f"DEBUG Excel: RESUMEN FINAL")
+    print(f"DEBUG Excel: Filas procesadas: {filas_procesadas}")
+    print(f"DEBUG Excel: Beneficiarios creados: {beneficiarios_creados}")
+    print(f"DEBUG Excel: Errores: {len(errores)}")
+    print(f"DEBUG Excel: ==========================================")
+
+    if errores:
+        print(f"DEBUG Excel: DETALLE DE ERRORES:")
+        for error in errores:
+            print(f"  - {error}")
+
+    # Validar que se haya creado al menos un beneficiario
+    if beneficiarios_creados == 0:
+        if errores:
+            # Si hay errores, mostrar un resumen
+            errores_muestra = errores[:5]  # Mostrar solo los primeros 5 errores
+            mensaje_errores = "\n".join(f"• {e}" for e in errores_muestra)
+            if len(errores) > 5:
+                mensaje_errores += f"\n... y {len(errores) - 5} errores más"
+            raise Exception(f"No se pudo crear ningún beneficiario. Se encontraron {len(errores)} errores:\n{mensaje_errores}")
+        else:
+            raise Exception("No se encontraron datos válidos en el archivo. Asegúrese de que el archivo contenga al menos una fila con datos después del encabezado.")
 
     return beneficiarios_creados
 

@@ -89,12 +89,31 @@ def admin_crear_campana(request):
             campana.archivo_nomina = archivo_nomina
             campana.save()
 
-            messages.success(request, f'Carga creada exitosamente con {beneficiarios_creados} beneficiarios')
+            # Mensaje de éxito con detalles
+            if beneficiarios_creados == 1:
+                messages.success(request, f'Carga creada exitosamente con {beneficiarios_creados} beneficiario')
+            else:
+                messages.success(request, f'Carga creada exitosamente con {beneficiarios_creados} beneficiarios')
         except Exception as e:
             print(f"DEBUG: Error en procesamiento: {str(e)}")
             import traceback
             print(f"DEBUG: Traceback: {traceback.format_exc()}")
-            messages.error(request, f'Error al procesar el archivo: {str(e)}')
+
+            # Formatear el mensaje de error para mejor visualización
+            error_msg = str(e)
+            # Si el mensaje tiene múltiples líneas (como los errores detallados), formatearlos mejor
+            if '\n' in error_msg:
+                # Separar el título del detalle
+                lineas = error_msg.split('\n')
+                titulo = lineas[0]
+                detalle = '\n'.join(lineas[1:])
+                messages.error(request, f'{titulo}')
+                if detalle.strip():
+                    # Agregar detalles adicionales como mensaje de advertencia
+                    messages.warning(request, f'Detalles:{detalle}')
+            else:
+                messages.error(request, f'Error al procesar el archivo: {error_msg}')
+
             campana.delete()  # Eliminar la campaña si hubo error
             return redirect('admin_crear_campana')
 
@@ -212,6 +231,106 @@ def admin_crear_usuario(request):
 
 
 @admin_required
+def admin_editar_usuario(request, perfil_id):
+    """Vista para editar un usuario existente"""
+    perfil = get_object_or_404(Perfil, id=perfil_id)
+
+    if request.method == 'POST':
+        nombre_completo = request.POST.get('nombre_completo')
+        username = request.POST.get('username')
+        email = request.POST.get('email', '')
+        rol = request.POST.get('rol')
+        planta_id = request.POST.get('planta')
+        rut = request.POST.get('rut', '').strip()
+        nueva_password = request.POST.get('password', '').strip()
+
+        # Validaciones
+        if not all([nombre_completo, username, rol, planta_id]):
+            messages.error(request, 'Todos los campos obligatorios deben ser completados')
+            return redirect('admin_editar_usuario', perfil_id=perfil_id)
+
+        if rol not in ['admin', 'guardia']:
+            messages.error(request, 'Rol inválido')
+            return redirect('admin_editar_usuario', perfil_id=perfil_id)
+
+        # Verificar si el username ya existe (excluyendo el usuario actual)
+        if User.objects.filter(username=username).exclude(id=perfil.user.id).exists():
+            messages.error(request, 'El nombre de usuario ya existe')
+            return redirect('admin_editar_usuario', perfil_id=perfil_id)
+
+        # Validar RUT si está presente
+        if rut:
+            es_valido, mensaje = validar_rut_chileno(rut)
+            if not es_valido:
+                messages.error(request, f'RUT inválido: {mensaje}')
+                return redirect('admin_editar_usuario', perfil_id=perfil_id)
+
+            # Verificar si el RUT ya existe (excluyendo el perfil actual)
+            if Perfil.objects.filter(rut=rut).exclude(id=perfil_id).exists():
+                messages.error(request, 'El RUT ya está registrado')
+                return redirect('admin_editar_usuario', perfil_id=perfil_id)
+
+        try:
+            planta = Planta.objects.get(id=planta_id)
+
+            # Actualizar usuario
+            perfil.user.username = username
+            perfil.user.email = email
+            perfil.user.first_name = nombre_completo.split()[0] if nombre_completo.split() else nombre_completo
+            perfil.user.last_name = ' '.join(nombre_completo.split()[1:]) if len(nombre_completo.split()) > 1 else ''
+
+            # Actualizar contraseña solo si se proporciona una nueva
+            if nueva_password:
+                perfil.user.set_password(nueva_password)
+
+            perfil.user.save()
+
+            # Actualizar perfil
+            perfil.rol = rol
+            perfil.planta = planta
+            perfil.rut = rut if rut else None
+            perfil.nombre_completo = nombre_completo
+            perfil.save()
+
+            messages.success(request, f'Usuario {username} actualizado exitosamente')
+            return redirect('admin_usuarios')
+
+        except Exception as e:
+            messages.error(request, f'Error al actualizar usuario: {str(e)}')
+            return redirect('admin_editar_usuario', perfil_id=perfil_id)
+
+    # GET - mostrar formulario con datos actuales
+    plantas = Planta.objects.filter(activa=True)
+    context = {
+        'perfil': perfil,
+        'plantas': plantas,
+    }
+
+    return render(request, 'registroCajas/admin/editar_usuario.html', context)
+
+
+@admin_required
+def admin_eliminar_usuario(request, perfil_id):
+    """Vista para eliminar un usuario"""
+    perfil = get_object_or_404(Perfil, id=perfil_id)
+
+    # No permitir eliminar al usuario actual
+    if perfil.user.id == request.user.id:
+        messages.error(request, 'No puedes eliminar tu propio usuario')
+        return redirect('admin_usuarios')
+
+    try:
+        username = perfil.user.username
+        # Eliminar el usuario (esto también eliminará el perfil por CASCADE)
+        perfil.user.delete()
+        messages.success(request, f'Usuario {username} eliminado exitosamente')
+    except Exception as e:
+        messages.error(request, f'Error al eliminar usuario: {str(e)}')
+
+    return redirect('admin_usuarios')
+
+
+@admin_required
 def admin_reportes(request):
     """Vista de reportes y estadísticas"""
     planta_codigo = request.session.get('planta_codigo')
@@ -231,9 +350,6 @@ def admin_reportes(request):
     elif periodo == 'mes':
         fecha_inicio = hoy.replace(day=1)
         fecha_fin = hoy
-    elif periodo == 'anio':
-        fecha_inicio = hoy.replace(month=1, day=1)
-        fecha_fin = hoy
     else:
         # Por defecto, si el periodo no es válido, mostrar 'hoy'
         periodo = 'hoy'
@@ -250,21 +366,21 @@ def admin_reportes(request):
     # Total de beneficiarios de las campañas activas en el período
     total_beneficiarios = Beneficiario.objects.filter(campana__in=campanas).count()
 
-    # Total de entregados para TODAS las campañas activas (para tasa de entrega y pendientes)
-    total_entregados_historico = Retiro.objects.filter(beneficiario__campana__in=campanas).count()
-
-    # Total de entregados EN EL PERÍODO seleccionado (para el card de "Entregados")
+    # Total de entregados EN EL PERÍODO seleccionado
     total_entregados_periodo = Retiro.objects.filter(
         beneficiario__campana__in=campanas,
         fecha_hora__date__gte=fecha_inicio,
         fecha_hora__date__lte=fecha_fin
     ).count()
-    
-    # Los pendientes siempre son sobre el total
+
+    # Total de entregados histórico (todos los retiros de las campañas)
+    total_entregados_historico = Retiro.objects.filter(beneficiario__campana__in=campanas).count()
+
+    # Los pendientes son sobre el total histórico
     total_pendientes = total_beneficiarios - total_entregados_historico
-    
-    # La tasa de entrega también es sobre el total
-    tasa_entrega = round((total_entregados_historico / total_beneficiarios * 100) if total_beneficiarios > 0 else 0, 1)
+
+    # La tasa de entrega se calcula sobre el período seleccionado
+    tasa_entrega = round((total_entregados_periodo / total_beneficiarios * 100) if total_beneficiarios > 0 else 0, 1)
 
     # Retiros recientes en el período para la lista
     retiros = Retiro.objects.filter(
@@ -308,7 +424,7 @@ def admin_emergencia(request):
         descripcion = request.POST.get('descripcion', '')
 
         try:
-            fecha = datetime.strptime(fecha_str, '%Y-%m-d').date()
+            fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
 
             # Validar que la fecha esté dentro del rango de la carga
             if fecha < campana_activa.fecha_inicio or fecha > campana_activa.fecha_fin:

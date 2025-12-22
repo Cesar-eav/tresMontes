@@ -35,10 +35,10 @@
                                 </span>
                             </td>
                             <td class="text-end">
-                                <a href="#" class="btn btn-sm btn-outline-secondary disabled" title="Editar (Próximamente)">
+                                <a href="{% url 'admin_editar_usuario' perfil.id %}" class="btn btn-sm btn-outline-secondary" title="Editar usuario">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <a href="#" class="btn btn-sm btn-outline-danger disabled" title="Eliminar (Próximamente)">
+                                <a href="{% url 'admin_eliminar_usuario' perfil.id %}" class="btn btn-sm btn-outline-danger" title="Eliminar usuario" onclick="return confirm('¿Estás seguro de eliminar al usuario {{ perfil.nombre_completo }}?')">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </td>

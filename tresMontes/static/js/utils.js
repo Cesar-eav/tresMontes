@@ -106,10 +106,22 @@ function vincularFormateadorRUT(inputId) {
         console.warn(`No se encontró elemento con ID: ${inputId}`);
         return;
     }
-    
-    input.addEventListener('input', function() {
+
+    // 1. Al salir del campo (Blur): Formateamos visualmente (XX.XXX.XXX-Y)
+    input.addEventListener('blur', function() {
         this.value = formatearRUT(this.value);
     });
+
+    // 2. Al entrar al campo (Focus): Limpiamos para facilitar la edición (XXXXXXXXY)
+    // Esto evita que el usuario tenga que borrar puntos y guiones manualmente
+    input.addEventListener('focus', function() {
+        this.value = limpiarRUT(this.value);
+    });
+}
+
+// Función auxiliar para limpiar (déjala disponible en tu scope)
+function limpiarRUT(rut) {
+    return rut.replace(/[^0-9kK]/g, ''); // Deja solo números y K
 }
 
 // Exportar funciones (para uso en módulos si es necesario)
