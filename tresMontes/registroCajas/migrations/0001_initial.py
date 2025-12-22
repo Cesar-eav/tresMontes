@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             name='Beneficiario',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('nombre', models.CharField(max_length=200)),
+                ('nombre', models.CharField(max_length=200)),                
                 ('rut', models.CharField(max_length=12, validators=[django.core.validators.RegexValidator(message='Formato de RUT inválido. Use: 12.345.678-9', regex='^\\d{1,2}\\.\\d{3}\\.\\d{3}[-][0-9kK]{1}$')])),
                 ('tipo_contrato', models.CharField(choices=[('indefinido', 'Plazo Indefinido'), ('fijo', 'Plazo Fijo')], max_length=20)),
                 ('tipo_caja', models.CharField(choices=[('estandar', 'Estándar'), ('especial', 'Especial'), ('premium', 'Premium')], default='estandar', max_length=20)),

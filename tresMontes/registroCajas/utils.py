@@ -35,7 +35,12 @@ def procesar_excel_nomina(archivo, campana, planta):
 
 def _procesar_csv_nomina(archivo, campana, planta):
     """
-    Procesa un archivo CSV con el formato:
+    Procesa un archivo CSV con formato flexible:
+
+    Formato simplificado (5 columnas):
+    RUT | NOMBRE | TIPO_CONTRATO | TIPO_CAJA | PLANTA_ID
+
+    Formato extendido (9 columnas - legacy):
     RUT | EMPLEADO | NOMBRES | APELLIDOS | CARGO | TIPO DE CONTRATO | PERIODO | SEDE | ESTADO
     """
     beneficiarios_creados = 0
@@ -68,19 +73,34 @@ def _procesar_csv_nomina(archivo, campana, planta):
         if not header:
             raise Exception("El archivo no tiene encabezado. Asegúrese de que la primera fila contenga los nombres de las columnas.")
 
-        # Validar número de columnas (debe tener al menos 9)
-        if len(header) < 9:
-            raise Exception(f"El archivo tiene {len(header)} columnas pero se requieren al menos 9 columnas: RUT, EMPLEADO, NOMBRES, APELLIDOS, CARGO, TIPO DE CONTRATO, PERIODO, SEDE, ESTADO")
+        # Validar número de columnas (debe tener al menos 4)
+        num_columnas = len(header)
+        if num_columnas < 4:
+            raise Exception(f"El archivo tiene {num_columnas} columnas pero se requieren al menos 4 columnas: RUT, NOMBRE, TIPO_CONTRATO, TIPO_CAJA/PLANTA_ID")
 
-        # Detectar índice de columna que represente planta/sede/planta_id (si existe)
+        # Detectar formato del CSV basado en número de columnas
+        formato_simplificado = num_columnas >= 4 and num_columnas <= 5
+        print(f"DEBUG: Formato detectado: {'SIMPLIFICADO (4-5 columnas)' if formato_simplificado else 'EXTENDIDO (9+ columnas)'}")
+
+        # Detectar índices de columnas importantes
+        header_lower = [h.strip().lower() if h else '' for h in header]
+
+        # Detectar índice de planta/sede
         planta_idx = None
-        if header:
-            header_lower = [h.strip().lower() if h else '' for h in header]
-            for i, h in enumerate(header_lower):
-                if any(k in h for k in ['planta', 'planta_id', 'sede', 'site', 'sucursal', 'centro']):
-                    planta_idx = i
-                    break
+        for i, h in enumerate(header_lower):
+            if any(k in h for k in ['planta', 'planta_id', 'sede', 'site', 'sucursal', 'centro']):
+                planta_idx = i
+                break
+
+        # Detectar índice de tipo de contrato
+        tipo_contrato_idx = None
+        for i, h in enumerate(header_lower):
+            if any(k in h for k in ['tipo', 'contrato', 'tipo_contrato']):
+                tipo_contrato_idx = i
+                break
+
         print(f"DEBUG: Índice de columna planta detectado: {planta_idx}")
+        print(f"DEBUG: Índice de columna tipo_contrato detectado: {tipo_contrato_idx}")
 
         for idx, row in enumerate(lector_csv, start=2):
             filas_procesadas += 1
@@ -92,50 +112,75 @@ def _procesar_csv_nomina(archivo, campana, planta):
                 print(f"DEBUG: Fila {idx} está vacía, saltando...")
                 continue
 
-            # Validar que tenga al menos 4 columnas (RUT, EMPLEADO, NOMBRES, APELLIDOS)
-            if len(row) < 4:
-                error = f"Fila {idx}: Tiene {len(row)} columnas pero se requieren al menos 4 (RUT, EMPLEADO, NOMBRES, APELLIDOS)"
+            # Validar que tenga al menos las columnas mínimas
+            min_cols = 4
+            if len(row) < min_cols:
+                error = f"Fila {idx}: Tiene {len(row)} columnas pero se requieren al menos {min_cols}"
                 print(f"DEBUG ERROR: {error}")
                 errores.append(error)
                 continue
 
-            # Extraer columnas según formato:
-            # 0: RUT
-            # 1: EMPLEADO
-            # 2: NOMBRES
-            # 3: APELLIDOS
-            # 4: CARGO
-            # 5: TIPO DE CONTRATO
-            # 6: PERIODO
-            # 7: SEDE
-            # 8: ESTADO
+            # Procesar según el formato detectado
+            if formato_simplificado:
+                # Formato simplificado: RUT | NOMBRE | TIPO_CONTRATO | TIPO_CAJA | PLANTA_ID
+                # 0: RUT
+                # 1: NOMBRE
+                # 2: TIPO_CONTRATO
+                # 3: TIPO_CAJA (opcional, por defecto 'estandar')
+                # 4: PLANTA_ID (opcional, usa planta por defecto si no se especifica)
 
-            rut = str(row[0]).strip() if row[0] else ''
-            empleado = str(row[1]).strip() if len(row) > 1 and row[1] else ''
-            nombres = str(row[2]).strip() if len(row) > 2 and row[2] else ''
-            apellidos = str(row[3]).strip() if len(row) > 3 and row[3] else ''
+                rut = str(row[0]).strip() if row[0] else ''
+                nombre_completo = str(row[1]).strip() if len(row) > 1 and row[1] else ''
+                tipo_contrato_raw = str(row[2]).strip().lower() if len(row) > 2 and row[2] else 'indefinido'
+                tipo_caja_raw = str(row[3]).strip().lower() if len(row) > 3 and row[3] else 'estandar'
+                planta_id_raw = str(row[4]).strip() if len(row) > 4 and row[4] else ''
 
+                print(f"DEBUG: [FORMATO SIMPLIFICADO] RUT={rut}, NOMBRE={nombre_completo}, TIPO_CONTRATO={tipo_contrato_raw}, TIPO_CAJA={tipo_caja_raw}, PLANTA_ID={planta_id_raw}")
+            else:
+                # Formato extendido: RUT | EMPLEADO | NOMBRES | APELLIDOS | CARGO | TIPO DE CONTRATO | PERIODO | SEDE | ESTADO
+                # 0: RUT
+                # 1: EMPLEADO
+                # 2: NOMBRES
+                # 3: APELLIDOS
+                # 4: CARGO (ignorado)
+                # 5: TIPO DE CONTRATO
+                # 6: PERIODO (ignorado)
+                # 7: SEDE
+                # 8: ESTADO (ignorado)
+
+                rut = str(row[0]).strip() if row[0] else ''
+                empleado = str(row[1]).strip() if len(row) > 1 and row[1] else ''
+                nombres = str(row[2]).strip() if len(row) > 2 and row[2] else ''
+                apellidos = str(row[3]).strip() if len(row) > 3 and row[3] else ''
+
+                # Construir nombre completo combinando EMPLEADO, NOMBRES y APELLIDOS
+                partes_nombre = [p for p in [empleado, nombres, apellidos] if p]
+                nombre_completo = ' '.join(partes_nombre).strip()
+
+                print(f"DEBUG: [FORMATO EXTENDIDO] RUT={rut}, EMPLEADO={empleado}, NOMBRES={nombres}, APELLIDOS={apellidos}")
+                print(f"DEBUG: Nombre completo construido: '{nombre_completo}'")
+
+                # Tipo de contrato desde columna específica o detectada
+                if tipo_contrato_idx is not None and len(row) > tipo_contrato_idx:
+                    tipo_contrato_raw = str(row[tipo_contrato_idx]).strip().lower()
+                elif len(row) > 5:
+                    tipo_contrato_raw = str(row[5]).strip().lower()
+                else:
+                    tipo_contrato_raw = 'indefinido'
+
+            # Validaciones comunes
             if not rut:
                 error = f"Fila {idx}: RUT vacío"
                 print(f"DEBUG ERROR: {error}")
                 errores.append(error)
                 continue
 
-            # Construir nombre completo combinando EMPLEADO, NOMBRES y APELLIDOS
-            partes_nombre = [p for p in [empleado, nombres, apellidos] if p]
-            nombre_completo = ' '.join(partes_nombre).strip()
-
-            print(f"DEBUG: RUT={rut}, EMPLEADO={empleado}, NOMBRES={nombres}, APELLIDOS={apellidos}")
-            print(f"DEBUG: Nombre completo construido: '{nombre_completo}'")
-
             if not nombre_completo:
-                error = f"Fila {idx}: Nombre completo vacío (EMPLEADO, NOMBRES y APELLIDOS están vacíos)"
+                error = f"Fila {idx}: Nombre vacío"
                 print(f"DEBUG ERROR: {error}")
                 errores.append(error)
                 continue
 
-            # Tipo de contrato (columna 5, índice 5)
-            tipo_contrato_raw = str(row[5]).strip().lower() if len(row) > 5 and row[5] else 'indefinido'
             print(f"DEBUG: Tipo contrato raw: '{tipo_contrato_raw}'")
 
             # Mapear tipos de contrato
@@ -146,64 +191,78 @@ def _procesar_csv_nomina(archivo, campana, planta):
 
             print(f"DEBUG: Tipo contrato final: {tipo_contrato}")
 
-            # Tipo de caja por defecto
-            tipo_caja = 'estandar'
+            # Determinar tipo de caja
+            if formato_simplificado:
+                # En formato simplificado, tipo_caja está en la columna 3
+                tipo_caja = tipo_caja_raw if tipo_caja_raw in ['estandar', 'especial', 'premium'] else 'estandar'
+            else:
+                # En formato extendido, usar valor por defecto
+                tipo_caja = 'estandar'
+
+            print(f"DEBUG: Tipo caja final: {tipo_caja}")
 
             # Determinar planta por fila (si existe columna), sino usar la planta por defecto
             planta_por_fila = planta
             try:
-                if planta_idx is not None and len(row) > planta_idx:
+                # Obtener valor de planta desde la columna correspondiente
+                raw_planta_val = ''
+                if formato_simplificado:
+                    # En formato simplificado, la planta_id está en columna 4
+                    raw_planta_val = planta_id_raw
+                elif planta_idx is not None and len(row) > planta_idx:
+                    # En formato extendido, usar el índice detectado
                     raw_planta_val = str(row[planta_idx]).strip()
-                    print(f"DEBUG: Valor planta/sede del CSV: '{raw_planta_val}'")
-                    if raw_planta_val:
-                        # Intentar por ID numérico
-                        try:
-                            planta_id = int(raw_planta_val)
-                            planta_por_fila = Planta.objects.get(id=planta_id)
-                            print(f"DEBUG: Planta encontrada por ID {planta_id}: {planta_por_fila.nombre}")
-                        except (ValueError, Planta.DoesNotExist):
-                            # Si no es un ID numérico, mapear nombre/código a planta
-                            raw_lower = raw_planta_val.lower()
-                            planta_encontrada = False
 
-                            # Mapeo de nombres comunes a códigos de planta
-                            if 'santiago' in raw_lower or 'casablanca' in raw_lower:
+                if raw_planta_val:
+                    print(f"DEBUG: Valor planta/sede del CSV: '{raw_planta_val}'")
+                    # Intentar por ID numérico
+                    try:
+                        planta_id = int(raw_planta_val)
+                        planta_por_fila = Planta.objects.get(id=planta_id)
+                        print(f"DEBUG: Planta encontrada por ID {planta_id}: {planta_por_fila.nombre}")
+                    except (ValueError, Planta.DoesNotExist):
+                        # Si no es un ID numérico, mapear nombre/código a planta
+                        raw_lower = raw_planta_val.lower()
+                        planta_encontrada = False
+
+                        # Mapeo de nombres comunes a códigos de planta
+                        if 'santiago' in raw_lower or 'casablanca' in raw_lower or 'casa' in raw_lower or 'blanca' in raw_lower:
+                            try:
+                                planta_por_fila = Planta.objects.get(codigo='casablanca')
+                                print(f"DEBUG: Mapeado '{raw_planta_val}' -> Casa Blanca")
+                                planta_encontrada = True
+                            except Planta.DoesNotExist:
+                                pass
+                        elif 'valparaiso' in raw_lower or 'valparaíso' in raw_lower:
+                            if 'bic' in raw_lower:
                                 try:
-                                    planta_por_fila = Planta.objects.get(codigo='casablanca')
-                                    print(f"DEBUG: Mapeado '{raw_planta_val}' -> Casa Blanca")
+                                    planta_por_fila = Planta.objects.get(codigo='valparaiso_bic')
+                                    print(f"DEBUG: Mapeado '{raw_planta_val}' -> Valparaíso BIC")
                                     planta_encontrada = True
                                 except Planta.DoesNotExist:
                                     pass
-                            elif 'valparaiso' in raw_lower or 'valparaíso' in raw_lower:
-                                if 'bic' in raw_lower:
-                                    try:
-                                        planta_por_fila = Planta.objects.get(codigo='valparaiso_bic')
-                                        print(f"DEBUG: Mapeado '{raw_planta_val}' -> Valparaíso BIC")
-                                        planta_encontrada = True
-                                    except Planta.DoesNotExist:
-                                        pass
-                                else:
-                                    try:
-                                        planta_por_fila = Planta.objects.get(codigo='valparaiso_bif')
-                                        print(f"DEBUG: Mapeado '{raw_planta_val}' -> Valparaíso BIF")
-                                        planta_encontrada = True
-                                    except Planta.DoesNotExist:
-                                        pass
-                            elif 'rancagua' in raw_lower:
-                                # Rancagua: buscar si existe alguna planta asociada
-                                print(f"DEBUG: '{raw_planta_val}' (Rancagua) - usando planta por defecto")
-
-                            # Si no se encontró por mapeo, intentar búsqueda directa
-                            if not planta_encontrada:
+                            else:
                                 try:
-                                    planta_por_fila = Planta.objects.get(codigo=raw_lower)
-                                    print(f"DEBUG: Planta encontrada por código: {planta_por_fila.nombre}")
+                                    planta_por_fila = Planta.objects.get(codigo='valparaiso_bif')
+                                    print(f"DEBUG: Mapeado '{raw_planta_val}' -> Valparaíso BIF")
+                                    planta_encontrada = True
                                 except Planta.DoesNotExist:
-                                    try:
-                                        planta_por_fila = Planta.objects.get(nombre__iexact=raw_planta_val)
-                                        print(f"DEBUG: Planta encontrada por nombre: {planta_por_fila.nombre}")
-                                    except Planta.DoesNotExist:
-                                        print(f"DEBUG: No se pudo mapear '{raw_planta_val}' - usando planta por defecto")
+                                    pass
+                        elif 'rancagua' in raw_lower:
+                            # Rancagua: buscar si existe alguna planta asociada
+                            print(f"DEBUG: '{raw_planta_val}' (Rancagua) - usando planta por defecto")
+
+                        # Si no se encontró por mapeo, intentar búsqueda directa
+                        if not planta_encontrada:
+                            try:
+                                planta_por_fila = Planta.objects.get(codigo=raw_lower)
+                                print(f"DEBUG: Planta encontrada por código: {planta_por_fila.nombre}")
+                            except Planta.DoesNotExist:
+                                try:
+                                    planta_por_fila = Planta.objects.get(nombre__iexact=raw_planta_val)
+                                    print(f"DEBUG: Planta encontrada por nombre: {planta_por_fila.nombre}")
+                                except Planta.DoesNotExist:
+                                    print(f"DEBUG: No se pudo mapear '{raw_planta_val}' - usando planta por defecto")
             except Exception as ex:
                 print(f"DEBUG: Error al determinar planta: {ex}")
                 planta_por_fila = planta
