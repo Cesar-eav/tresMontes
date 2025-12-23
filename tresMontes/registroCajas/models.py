@@ -184,9 +184,9 @@ class Beneficiario(models.Model):
             planta=self.planta
         ).exclude(codigo_caja='').order_by('id')
 
-        # Encontrar el máximo correlativo
+        # Encontrar el máximo correlativo (solo del mismo tipo de contrato)
         max_correlativo = 0
-        patron = rf'^[IF]-{dia}{mes}{planta_codigo}(\d+)$'
+        patron = rf'^{prefijo}-{dia}{mes}{planta_codigo}(\d+)$'
 
         for beneficiario in beneficiarios_planta:
             match = re.match(patron, beneficiario.codigo_caja)

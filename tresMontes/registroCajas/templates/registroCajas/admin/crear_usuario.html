@@ -28,10 +28,10 @@
                 </div>
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="form-group"><label>RUT</label><input type="text" id="rut_crear_usuario" name="rut" class="form-control" placeholder="12.345.678-9"></div>
+                        <div class="form-group"><label>Rol *</label><select name="rol" id="rol_select" class="form-control" required><option value="admin">Administrador</option><option value="guardia">Guardia</option><option value="trabajador">Trabajador</option></select></div>
                     </div>
                     <div class="col-md-6">
-                        <div class="form-group"><label>Rol *</label><select name="rol" class="form-control" required><option value="admin">Administrador</option><option value="guardia">Guardia</option></select></div>
+                        <div class="form-group"><label id="rut_label">RUT</label><input type="text" id="rut_crear_usuario" name="rut" class="form-control" placeholder="12.345.678-9"></div>
                     </div>
                 </div>
                 <div class="row">
@@ -54,6 +54,24 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         vincularFormateadorUsuarioRUT('rut_crear_usuario');
+
+        // Hacer RUT obligatorio cuando se selecciona rol "Trabajador"
+        const rolSelect = document.getElementById('rol_select');
+        const rutInput = document.getElementById('rut_crear_usuario');
+        const rutLabel = document.getElementById('rut_label');
+
+        function actualizarRequeridoRUT() {
+            if (rolSelect.value === 'trabajador') {
+                rutInput.required = true;
+                rutLabel.textContent = 'RUT *';
+            } else {
+                rutInput.required = false;
+                rutLabel.textContent = 'RUT';
+            }
+        }
+
+        rolSelect.addEventListener('change', actualizarRequeridoRUT);
+        actualizarRequeridoRUT(); // Ejecutar al cargar
     });
 </script>
 {% endblock %}

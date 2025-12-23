@@ -3,6 +3,16 @@
 {% block content %}
 <div class="header"><h2>Mi Caja</h2></div>
 <div class="content">
+    {% if beneficiario %}
+    {% if not beneficiario.tiene_retiro %}
+    <div class="card">
+        <div class="card-header"><i class="bi bi-qr-code me-2"></i> Código QR</div>
+        <div class="card-body text-center">
+            <div id="qrcode" style="display: inline-block;"></div>
+            <p class="text-muted small mt-2">Muestre este código en portería</p>
+        </div>
+    </div>
+    {% endif %}
     <div class="card">
         <div class="card-header"><i class="bi bi-person-circle me-2"></i> Mi Información</div>
         <div class="card-body">
@@ -11,7 +21,6 @@
             <p class="small text-muted">{{ planta.nombre }}</p>
         </div>
     </div>
-    {% if beneficiario %}
     <div class="card">
         <div class="card-header"><i class="bi bi-gift me-2"></i> Estado de mi Caja</div>
         <div class="card-body">
@@ -30,16 +39,15 @@
             {% endif %}
         </div>
     </div>
-    {% if not beneficiario.tiene_retiro %}
+    {% else %}
     <div class="card">
-        <div class="card-header"><i class="bi bi-qr-code me-2"></i> Código QR</div>
-        <div class="card-body text-center">
-            <div id="qrcode" style="display: inline-block;"></div>
-            <p class="text-muted small mt-2">Muestre este código en portería</p>
+        <div class="card-header"><i class="bi bi-person-circle me-2"></i> Mi Información</div>
+        <div class="card-body">
+            <h5>{{ perfil.nombre_completo }}</h5>
+            <p class="text-muted mb-2">{{ perfil.rut }}</p>
+            <p class="small text-muted">{{ planta.nombre }}</p>
         </div>
     </div>
-    {% endif %}
-    {% else %}
     <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i> No tiene cajas asignadas en este momento.</div>
     {% endif %}
 </div>

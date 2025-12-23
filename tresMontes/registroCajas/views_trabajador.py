@@ -15,12 +15,13 @@ def trabajador_home(request):
     planta = get_object_or_404(Planta, codigo=planta_codigo) if planta_codigo else None
 
     # Buscar si el trabajador tiene una caja asignada en campaña activa
+    # La relación se hace por beneficiario.planta (del CSV), no por campaña.planta
     beneficiario = None
     if perfil.rut:
-        # Buscar en campañas activas de la planta
+        # Buscar por RUT y planta del beneficiario (ignorando planta de campaña)
         beneficiario = Beneficiario.objects.filter(
             rut=perfil.rut,
-            campana__planta=planta,
+            planta=planta,
             campana__activa=True
         ).first()
 

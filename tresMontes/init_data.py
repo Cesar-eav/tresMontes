@@ -101,7 +101,7 @@ def crear_usuarios():
             'perfil': {
                 'rol': 'trabajador',
                 'planta': plantas[1],
-                'rut': '51.555.555-5',
+                'rut': '55.555.555-5',
                 'nombre_completo': 'María González'
             }
         },

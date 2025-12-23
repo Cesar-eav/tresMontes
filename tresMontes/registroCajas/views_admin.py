@@ -157,7 +157,7 @@ def admin_usuarios(request):
 
 @admin_required
 def admin_crear_usuario(request):
-    """Vista para crear un nuevo usuario (admin o guardia)"""
+    """Vista para crear un nuevo usuario (admin, guardia o trabajador)"""
     if request.method == 'POST':
         nombre_completo = request.POST.get('nombre_completo')
         username = request.POST.get('username')
@@ -172,8 +172,13 @@ def admin_crear_usuario(request):
             messages.error(request, 'Todos los campos son obligatorios')
             return redirect('admin_crear_usuario')
 
-        if rol not in ['admin', 'guardia']:
+        if rol not in ['admin', 'guardia', 'trabajador']:
             messages.error(request, 'Rol inválido')
+            return redirect('admin_crear_usuario')
+
+        # RUT es obligatorio para trabajadores
+        if rol == 'trabajador' and not rut:
+            messages.error(request, 'El RUT es obligatorio para trabajadores')
             return redirect('admin_crear_usuario')
 
         # Verificar si el username ya existe

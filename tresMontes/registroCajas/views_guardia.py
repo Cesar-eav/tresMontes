@@ -15,19 +15,19 @@ def guardia_home(request):
     planta_codigo = request.session.get('planta_codigo')
     planta = get_object_or_404(Planta, codigo=planta_codigo)
 
-    # Buscar CUALQUIER campaña activa
+    # Buscar beneficiarios de la planta del guardia en CUALQUIER campaña activa
+    # La relación es por beneficiario.planta (del CSV), no por campaña.planta
+    beneficiarios_planta = Beneficiario.objects.filter(
+        planta=planta,
+        campana__activa=True
+    )
+
+    total_entregados = beneficiarios_planta.filter(retiro__isnull=False).distinct().count()
+    total_pendientes = beneficiarios_planta.filter(retiro__isnull=True).count()
+    beneficiarios_pendientes = beneficiarios_planta.filter(retiro__isnull=True).order_by('nombre')[:10]
+
+    # Obtener alguna campaña activa para mostrar info (puede ser de cualquier planta)
     campana_activa = Campana.objects.filter(activa=True).order_by('-fecha_creacion').first()
-
-    total_entregados = 0
-    total_pendientes = 0
-    beneficiarios_pendientes = []
-
-    if campana_activa:
-        # Filtrar los beneficiarios de ESA campaña que pertenecen a la planta del guardia
-        beneficiarios_planta = campana_activa.beneficiarios.filter(planta=planta)
-        total_entregados = beneficiarios_planta.filter(retiro__isnull=False).distinct().count()
-        total_pendientes = beneficiarios_planta.filter(retiro__isnull=True).count()
-        beneficiarios_pendientes = beneficiarios_planta.filter(retiro__isnull=True).order_by('nombre')[:10]
 
     context = {
         'planta': planta,
@@ -66,13 +66,13 @@ def guardia_buscar_rut(request):
     rut_buscado = request.GET.get('rut', '').strip()
     desde_scanner = request.GET.get('auto', '') == '1'  # Parámetro para identificar escaneo QR
 
-    if rut_buscado and campana_activa:
-        # Buscar beneficiario en la campaña activa Y que pertenezca a la planta del guardia
+    if rut_buscado:
+        # Buscar beneficiario en CUALQUIER campaña activa que pertenezca a la planta del guardia
         try:
             beneficiario = Beneficiario.objects.get(
                 rut=rut_buscado,
-                campana=campana_activa,
-                planta=planta # Asegurar que el guardia solo pueda encontrar gente de su planta
+                campana__activa=True,
+                planta=planta # La relación es por beneficiario.planta (del CSV), no por campaña.planta
             )
 
             # Si viene desde el scanner QR, registrar automáticamente
